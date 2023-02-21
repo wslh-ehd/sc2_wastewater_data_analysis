@@ -7,7 +7,7 @@ workflow="all"
 
 
 # Help
-usage() { printf "Usage: $0 \n[-o <string> Workflow to run between: ""'freyja', 'database', 'all' (default: 'all')""][-o <string> (optional) Output directory in 'Results' (example: ""'2023-01-03'"")]\n" 1>&2; exit 1; }
+usage() { printf "Usage: $0 \n[-w <string> Workflow to run between: ""'freyja', 'database', 'all' (default: 'all')""][-o <string> (optional) Output directory in 'Results' (example: ""'2023-01-03'"")]\n" 1>&2; exit 1; }
 
 
 
