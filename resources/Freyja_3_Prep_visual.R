@@ -6,6 +6,7 @@ set.seed(123)
 #################################################################################
 #setwd("/scratch/projects/SARS-CoV-2/Results/2022-10-20_removeRecombinant/freyja/")
 
+# Variant discarded if porportion below this threshold
 min.proportion = 1 # 0-100
 
 # WHO lineages with sublineages to display on the dashboard 
@@ -20,8 +21,8 @@ replace.lineages<-data.frame(Pango=c("B.1.1.529", "Add lineage here"),
 #                          Pango=c("BA.3", "TESTBA.4.6TEST", "Add lineage here"))
 
 # When simplify alias_key.json ignore the sublineages below
-ignore.name.lineages<-data.frame(Pango.1=c("XBB", "BexampleA", "Add lineage here"),
-                                 Pango.2=c("XBB", "Bexample.1.1.529", "Add lineage here"))
+ignore.name.lineages<-data.frame(Pango.1=c("XBB", "Add lineage here"),
+                                 Pango.2=c("XBB", "Add lineage here"))
 
 
 #################################################################################
@@ -100,13 +101,13 @@ taxo.1<-rbind(taxo.1, replace.lineages) #taxo.1<-rbind(taxo.1, complete.taxo)
 # Create the lineages displayed on the dashboard
 taxo.1$Lineage<-ifelse(taxo.1$Pango %!in% replace.lineages$Pango, paste0(taxo.1$WHO, " (", taxo.1$Pango, ")"), taxo.1$WHO)
 
-# Add full Pango name
+# Add full Pango name (except for recombinants)
 taxo.1$Pango.full<-taxo.1$Pango
 for(i in 1:nrow(lineage)){
   taxo.1$Pango.full<-gsub(paste0("^", lineage$original[i], "[.]"), paste0(lineage$Pango[i], "."), taxo.1$Pango.full, ignore.case = FALSE)
 }
 taxo.1$Pango.full<-ifelse(taxo.1$Pango %in% replace.lineages$Pango, taxo.1$Pango, taxo.1$Pango.full)
-
+taxo.1$Pango.full<-ifelse(startsWith(taxo.1$Pango,"X"), taxo.1$Pango, taxo.1$Pango.full)
 
 
 
