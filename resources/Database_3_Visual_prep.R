@@ -219,7 +219,7 @@ data$gene<-ifelse(is.na(data$gene), "inter", data$temp)
 data<-data %>% select(-temp)
 
 
-save.image(file="data.RData")
+#save.image(file="data.RData")
 
 
 
