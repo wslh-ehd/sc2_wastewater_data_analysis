@@ -1,0 +1,52 @@
+sites	PopulationServed	zipcode
+Appleton	74832	54914
+Ashland	8000	54806
+Baraboo	14000	53913
+Black River Falls	5200	54615
+Clintonville	4455	54929
+Columbus	7000	53925
+Eau Claire	75000	54703
+Green Bay	189000	54302
+Hartford	15200	53027
+Hudson	2375	54843
+Hayward	19680	54016
+Janesville	63500	53548
+Kenosha	122000	53143
+Keshena	2500	54135
+La Crosse	85000	54601
+Lodi	3100	53555
+Manitowoc	34450	54220
+Marinette	10608	54143
+Marshfield	19316	54449
+Mauston	4500	53948
+Menomonie	16000	54751
+Merrill	10000	54452
+Madison	390880.8	53713
+Monroe	10800	53566
+Oconomowoc	34135	53066
+Oshkosh	67000	54902
+MadisonP11	132989.1	
+MadisonP18	117029.8	
+MadisonP2	111594.3	
+MadisonP7	75074.58	
+MadisonP8	99747.73	
+Peshtigo	4000	54157
+Platteville	14000	53818
+Plymouth	9000	53073
+Portage	10693	53901
+Rib Lake	386	54470
+River Falls	16000	54022
+Sheboygan	75000	53081
+Spencer	2000	54479
+Stevens Point	27000	54481
+Sun Prairie	34926	53590
+Superior	26751	54880
+Viroqua	4335	54665
+Wausau	42000	54401
+Watertown	23655	53094
+Whitewater	14000	53190
+Wolf	18000	54166
+Milwaukee (Jones Island)	470007	53207
+Milwaukee (South Shore)	615934	53154
+Waupaca	10000	54981
+Walworth	30000	53184
