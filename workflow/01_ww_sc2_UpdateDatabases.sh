@@ -51,10 +51,10 @@ printf "Parameters used:-w $workflow -o $output\n"
 ##### Set output directories
 #########################################################################################
 cd /scratch/projects/SARS-CoV-2/Results/
-mkdir -f $output
-mkdir -f $output/freyja/
-mkdir -f $output/databases/
-mkdir -f $output/archive/
+mkdir -p $output
+mkdir -p $output/freyja/
+mkdir -p $output/databases/
+mkdir -p $output/archive/
 
 
 
