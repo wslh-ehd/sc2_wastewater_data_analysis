@@ -86,7 +86,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 	curl -o Database_3_Visual_prep.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_3_Visual_prep.R
 	cp /scratch/projects/SARS-CoV-2/Workflow/Database_Outbreak_VoC_to_explore.txt .
 
-	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_0_*.R 
+	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_0_*.R | tee ../archive/R_database_0.log
 
 	git clone https://github.com/hodcroftlab/covariants.git
 	awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ./covariants*/defining_mutations/*.tsv > covariant_mutations.tsv 
@@ -96,7 +96,8 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 
 
 	## Generate databases
-	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_1_*.R  3>&1 1>> ./$output/archive/01_UpdateDatabase.log 2>&1
+	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_1_*.R | tee ../archive/R_database_1.log
+
 
 
 fi
@@ -136,7 +137,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	wget https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json
 	cp outbreak_nomenclature.json ../databases/.
 
-	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_0_*.R 3>&1 1>> ./$output/archive/01_UpdateDatabase.log 2>&1
+	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
 
 
 	# Update freyja reference database
@@ -144,3 +145,6 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	    freyja update --outdir . # update lineage database https://github.com/andersen-lab/Freyja
 	# Remove recombinants, except XBB
 	awk '{ gsub("XBB","_X_B_B",$1); print $1 }' usher_barcodes.csv | grep -v "^X" | awk '{ gsub("_X_B_B","XBB",$1); print $1 }' > usher_barcodes_withRecombinantXBBonly.csv
+
+fi
+
