@@ -53,4 +53,4 @@ freyja.raw$Display<-paste0(as.Date(freyja.raw$Date), "_", freyja.raw$samples)
 
 
 
-save(freyja.raw, freyja, file="InternalUseData.RData")
+save(freyja.raw, freyja, last.run, file="InternalUseData.RData")
