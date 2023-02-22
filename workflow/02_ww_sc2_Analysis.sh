@@ -87,7 +87,8 @@ if [ $workflow == "database" ] || [ $workflow == "database_freyja_run" ] || [ $w
 
     # Analysis
     cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_2_*.R
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
 
 
 fi
@@ -119,11 +120,11 @@ if [ $workflow == "freyja" ] || [ $workflow == "all" ]; then
     # Process data for visualization
     cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
 
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_3_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_4_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_5_*.R
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
 
 fi
 
@@ -154,11 +155,11 @@ if [ $workflow == "database_freyja_run" ] ; then
     # Process data for visualization
     cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
 
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_3_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_4_*.R
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_5_*.R
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
+    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
 
 
 fi
