@@ -52,7 +52,7 @@ mv /scratch/projects/SARS-CoV-2/CopyFastqHere/*.gz ./fastq/.
 mv /scratch/projects/SARS-CoV-2/CopyFastqHere/samplesheet.csv samplesheet_$seq_folder.csv
 # Update the path within the file with the output directory 
 sed -i 's/seq_folder/'${seq_folder}'/' samplesheet_$seq_folder.csv; sed -i 's/seq_folder/'${seq_folder}'/' samplesheet_$seq_folder.csv
-curl -o custom_ww_viralrecon.config https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/custom_ww_viralrecon.config
+curl -o custom_ww_viralrecon.config https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/custom_ww_viralrecon.config
 # Download kraken2 (human + phiX) database  - workflow to obtain the files described here: entire workflow to generate these files: https://hackmd.io/@AstrobioMike/kraken2-read-filtering#Download-database-as-built-on-11-Sept-2020-LATEST
 curl -L -o kraken2_human_and_phiX_db.tar.gz https://ndownloader.figshare.com/files/24658262 
 tar -xzvf kraken2_human_and_phiX_db.tar.gz
@@ -74,7 +74,7 @@ nextflow run nf-core/viralrecon --input samplesheet_$seq_folder.csv \
 	--genome MN908947.3 \
 	--primer_set qiaseq \
 	--primer_set_version '1' \
-	--kraken2_db './kraken2_human_and_phiX_db/' \
+	--kraken2_db '/scratch/projects/SARS-CoV-2/$seq_folder/kraken2_human_and_phiX_db/' \
 	--kraken2_db_name 'human_phiX' \
 	--kraken2_variants_host_filter true \
 	-profile docker,test \
