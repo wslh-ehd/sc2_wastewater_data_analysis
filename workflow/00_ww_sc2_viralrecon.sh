@@ -82,6 +82,7 @@ nextflow run nf-core/viralrecon --input samplesheet_$seq_folder.csv \
 
 
 ## Remove kraken2 (human + phiX) database
+rm -rf kraken2_human_and_phiX_db.tar.gz
 rm -rf kraken2_human_and_phiX_db
 
 
