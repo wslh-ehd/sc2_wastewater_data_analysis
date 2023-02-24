@@ -122,14 +122,14 @@ docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
 
 
 ## Extract all SNPs informations
-printf 'Variant calls files (no filtering) into the "output" directory'
+printf 'Variant calls files (no filtering) into the "output" directory\n\n'
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
   /bin/bash -c 'for mpileup in variants/ivar/*.mpileup; do  out=${mpileup/.mpileup/_notfiltered.tsv}; out=${out/variants\/ivar\//}; cat $mpileup | ivar variants -t 0.0001 -q 20 -m 0 -g ./output/*.gff -r ./output/*.fasta -p ./output/$out; done'
 
 
 
 ## Freyja: Identify SNPs
-printf 'Create BAM files for Freyja into the "output/freyja" directory\n'
+printf 'Create BAM files for Freyja into the "output/freyja" directory\n\n'
 for sample in ./variants/bowtie2/*.ivar_trim.sorted.bam; do
 out=${sample/.ivar_trim.sorted.bam/}; out=${out/variants\/bowtie2\//}
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
