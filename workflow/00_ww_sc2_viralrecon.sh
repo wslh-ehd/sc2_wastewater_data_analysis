@@ -74,7 +74,7 @@ nextflow run nf-core/viralrecon --input samplesheet_$seq_folder.csv \
 	--genome MN908947.3 \
 	--primer_set qiaseq \
 	--primer_set_version '1' \
-	--kraken2_db '/scratch/projects/SARS-CoV-2/$seq_folder/kraken2_human_and_phiX_db/' \
+	--kraken2_db /scratch/projects/SARS-CoV-2/$seq_folder/kraken2_human_and_phiX_db/ \
 	--kraken2_db_name 'human_phiX' \
 	--kraken2_variants_host_filter true \
 	-profile docker,test \
