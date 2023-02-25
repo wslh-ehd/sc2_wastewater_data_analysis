@@ -8,7 +8,7 @@ library(dplyr)
 library(jsonlite)
 
 
-# Convert json to a df
+# Convert json to df
 jdata <- read_json("nameTable.json", simplifyVector = TRUE)
 jdata <- as.data.frame(jdata)
 for(i in 1:nrow(jdata)){
