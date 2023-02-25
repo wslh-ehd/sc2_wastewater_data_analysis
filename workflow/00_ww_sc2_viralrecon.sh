@@ -118,7 +118,7 @@ docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
 
 
 ## Extract all SNP/In/Del info from .mpileup files (using samtools + ivar)
-printf 'Variant calls files (no filtering) into the "output" directory'
+printf 'Variant calls files (no filtering) into the "output" directory\n\n'
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
   /bin/bash -c 'for mpileup in variants/ivar/*.mpileup; do  out=${mpileup/.mpileup/_notfiltered.tsv}; cat $mpileup | ivar variants -t 0.0001 -q 20 -m 0 -g *.gff -r *.fasta -p $out; done'
  
@@ -128,7 +128,7 @@ printf 'Create BAM files for Freyja into the "freyja" directory\n\n'
 for sample in ./variants/bowtie2/*.ivar_trim.sorted.bam; do
 out=${sample/.ivar_trim.sorted.bam/}; out=${out/\.\/variants\/bowtie2\//}
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
-#    freyja variants $sample --variants ./freyja/$out-variant --depths ./freyja/$out-depth --ref nCoV-2019.reference.fasta
+    freyja variants $sample --variants ./freyja/$out-variant --depths ./freyja/$out-depth --ref nCoV-2019.reference.fasta
 done
 
 
