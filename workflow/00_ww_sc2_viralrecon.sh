@@ -77,7 +77,8 @@ nextflow run nf-core/viralrecon --input samplesheet_$seq_folder.csv \
 	--kraken2_db /scratch/projects/SARS-CoV-2/$seq_folder/kraken2_human_and_phiX_db/ \
 	--kraken2_db_name 'human_phiX' \
 	--kraken2_variants_host_filter true \
-	-profile docker,test \
+	--skip_assembly \
+	-profile docker \
 	-c custom_ww_viralrecon.config
 
 
@@ -106,20 +107,28 @@ find ./work/ -type f -name '*GCA_009858895.3_ASM985889v3_genomic.200409.gff' |  
 find ./work/ -type f -name '*nCoV-2019.reference.fasta' |  while read P; do cp "$P" . ; done
 
 
-## Save ivar and freyja versions
+## Save samtools, ivar and freyja versions
 printf 'Save ivar and freyja versions (used below) into "pipeline_info" directory\n\n'
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
     freyja --version >> ./pipeline_info/freyja_version.log 2>&1
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
     ivar -v >> ./pipeline_info/ivar_version.log 2>&1
+docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
+    samtools version >> ./pipeline_info/samtools_version.log 2>&1
 
 
+## Extract all SNP/In/Del info from .mpileup files (using samtools + ivar)
+printf 'Variant calls files (no filtering) into the "output" directory'
+docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
+  /bin/bash -c 'for mpileup in variants/ivar/*.mpileup; do  out=${mpileup/.mpileup/_notfiltered.tsv}; cat $mpileup | ivar variants -t 0.0001 -q 20 -m 0 -g *.gff -r *.fasta -p $out; done'
+ 
+ 
 ## Freyja: Identify SNPs
 printf 'Create BAM files for Freyja into the "freyja" directory\n\n'
 for sample in ./variants/bowtie2/*.ivar_trim.sorted.bam; do
-out=${sample/.ivar_trim.sorted.bam/}; out=${out/variants\/bowtie2\//}
+out=${sample/.ivar_trim.sorted.bam/}; out=${out/\.\/variants\/bowtie2\//}
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
-    freyja variants $sample --variants ./freyja/$out-variant --depths ./freyja/$out-depth --ref nCoV-2019.reference.fasta
+#    freyja variants $sample --variants ./freyja/$out-variant --depths ./freyja/$out-depth --ref nCoV-2019.reference.fasta
 done
 
 
