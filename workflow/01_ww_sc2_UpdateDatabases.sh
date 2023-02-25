@@ -81,7 +81,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 
 	## Import resources
 	curl -o Database_0_ImportDatabase.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_0_ImportDatabase.R
-	curl -o Database_1_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_1_Usher_to_NextstrainWHO.R
+	curl -o Database_1_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Usher_to_NextstrainWHO.R
 	curl -o Database_2_CovariantMutations.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_2_CovariantMutations.R
 	curl -o Database_3_Visual_prep.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_3_Visual_prep.R
 	curl -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
@@ -130,7 +130,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	# Import resources
 	curl -o Freyja_0_GetLineagesOutbreak.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_0_GetLineagesOutbreak.R
 	curl -o Freyja_1_Aggregate.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_1_Aggregate.R
-	curl -o Freyja_2_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_2_Usher_to_NextstrainWHO.R
+	curl -o Freyja_2_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Usher_to_NextstrainWHO.R
 	curl -o Freyja_3_Prep_visual.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_3_Prep_visual.R
 	curl -o Freyja_4_VisualInternalUse.txt https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_4_VisualInternalUse.txt
 	curl -o Freyja_5_Dashboard.txt https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_5_Dashboard.txt
