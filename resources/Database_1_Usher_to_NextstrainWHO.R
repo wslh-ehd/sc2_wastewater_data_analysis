@@ -9,7 +9,7 @@ library(jsonlite)
 
 
 # Convert json file to df
-jdata <- read_json("outbreak_nomenclature.json", simplifyVector = TRUE)
+jdata <- read_json("nameTable.json", simplifyVector = TRUE)
 jdata <- as.data.frame(jdata)
 for(i in 1:nrow(jdata)){
   temp<-0
