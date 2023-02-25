@@ -84,7 +84,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 	curl -o Database_1_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_1_Usher_to_NextstrainWHO.R
 	curl -o Database_2_CovariantMutations.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_2_CovariantMutations.R
 	curl -o Database_3_Visual_prep.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_3_Visual_prep.R
-	curl -o outbreak_nomenclature.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
+	curl -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
 	cp /scratch/projects/SARS-CoV-2/Workflow/Database_Outbreak_VoC_to_explore.txt .
 
 	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_0_*.R | tee ../archive/R_database_0.log
@@ -134,7 +134,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	curl -o Freyja_3_Prep_visual.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_3_Prep_visual.R
 	curl -o Freyja_4_VisualInternalUse.txt https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_4_VisualInternalUse.txt
 	curl -o Freyja_5_Dashboard.txt https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_5_Dashboard.txt
-	curl -o outbreak_nomenclature.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
+	curl -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
 	wget https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json
 
 	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
