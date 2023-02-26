@@ -203,20 +203,28 @@ depth<-depth %>%
 # Add mutation info to data
 #################################################################
 
-# Add some mutations info and Call mutations
+# Replace NA describing intergenic positions by "inter"
+data$temp<-paste0(data$gene, ":", data$REF_AA, data$aa.pos)
+data$gene<-ifelse(is.na(data$gene), "inter", data$temp)
+data<-data %>% select(-temp)
+
+
+# Create mutation.nt variable
 data$mutation.nt<-ifelse(data$type=="substitution",
                              paste0(data$REF, data$POS, data$ALT),
                              paste0(data$deletion))
 data$mutation.nt<-ifelse(data$mutation.nt=="NA",
                              paste0(data$REF, data$POS, "(", data$ALT, ")"),
                              data$mutation.nt)
+data$mutation.nt<-ifelse(data$deletion %like% "NA:del",
+                         paste0(data$gene, "_", data$POS, ":DEL", data$ALT),
+                         data$mutation.nt)
+
+
 data$mutation.nt<-toupper(data$mutation.nt)
 
 
-# Add extra variables 
-data$temp<-paste0(data$gene, ":", data$REF_AA, data$aa.pos)
-data$gene<-ifelse(is.na(data$gene), "inter", data$temp)
-data<-data %>% select(-temp)
+
 
 
 #save.image(file="data.RData")
@@ -238,7 +246,7 @@ order1_xaxis<-data.voc.nextstrain %>% arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.voc.nextstrain that don't have depth info
 data.voc<-reshape2::dcast(data.voc.nextstrain, run_sample~mutation.nt,
                                value.var="mutation.nt",fill=0,fun.aggregate=length)
-data.voc<-reshape2::melt(data.voc)
+data.voc<-reshape2::melt(data.voc, id.vars = "run_sample")
 data.voc<-data.voc %>% filter(run_sample != "NA" & value==0)
 data.voc$run_sample_POS<-paste0(data.voc$run_sample, "_", parse_number(as.character(data.voc$variable)))
 # Add missing depth: 2. Extract missing depths
@@ -270,7 +278,7 @@ order2_xaxis<-data.voc.force %>% arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.voc.force that don't have depth info
 data2.voc<-reshape2::dcast(data.voc.force, run_sample~mutation.nt,
                                value.var="mutation.nt",fill=0,fun.aggregate=length)
-data2.voc<-reshape2::melt(data2.voc)
+data2.voc<-reshape2::melt(data2.voc, id.vars = "run_sample")
 data2.voc<-data2.voc %>% filter(run_sample != "NA" & value==0)
 data2.voc$run_sample_POS<-paste0(data2.voc$run_sample, "_", parse_number(as.character(data2.voc$variable)))
 # Add missing depth: 2. Extract missing depths
@@ -300,7 +308,7 @@ order3_xaxis<-data.snp.voc %>% arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.snp.voc that don't have depth info
 data.snp.voc.2<-reshape2::dcast(data.snp.voc, run_sample~mutation.nt,
                           value.var="mutation.nt",fill=0,fun.aggregate=length)
-data.snp.voc.2<-reshape2::melt(data.snp.voc.2)
+data.snp.voc.2<-reshape2::melt(data.snp.voc.2, id.vars = "run_sample")
 data.snp.voc.2<-data.snp.voc.2 %>% filter(run_sample != "NA" & value==0)
 data.snp.voc.2$run_sample_POS<-paste0(data.snp.voc.2$run_sample, "_", parse_number(as.character(data.snp.voc.2$variable)))
 # Add missing depth: 2. Extract missing depths
@@ -324,15 +332,15 @@ rm(data.snp.voc.2); rm(depth.snp.voc)
 ## Visual 4: NOT VoC-associated mutations (based on Outbreak database)
 
 # Merge mutations & data 
-data.snp.notvoc<-data %>% filter(mutation.nt %!in% unique(data.snp.voc$mutation.nt) & !is.na(POS))
-data.snp.notvoc <- full_join(data.snp.notvoc, mutations.variants %>% filter(status != "Variant of Concern") %>% select(mutation.nt, mutation.aa, lineage), by=c("mutation.nt"))
+data.snp.notvoc<-data %>% dplyr::filter(mutation.nt %!in% unique(data.snp.voc$mutation.nt) & !is.na(POS))
+data.snp.notvoc <- full_join(data.snp.notvoc, mutations.variants %>% dplyr::filter(status != "Variant of Concern") %>% dplyr::select(mutation.nt, mutation.aa, lineage), by=c("mutation.nt"))
 data.snp.notvoc<-data.snp.notvoc[, c("mutation.nt", "lineage", "mutation.aa", "sites", "Date", "POS", "gene", "geneplot", "ALT_FREQ", "TOTAL_DP", "run", "type", "Samples", "run_sample", "run_sample_POS", "QC_Run", "QC_Sample", "Sample.type")]
 order4_xaxis<-data.snp.notvoc %>% arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.snp.notvoc that don't have depth info
 data.snp.notvoc.2<-reshape2::dcast(data.snp.notvoc, run_sample~mutation.nt,
                             value.var="mutation.nt",fill=0,fun.aggregate=length)
-data.snp.notvoc.2<-reshape2::melt(data.snp.notvoc.2)
-data.snp.notvoc.2<-data.snp.notvoc.2 %>% filter(run_sample != "NA" & value==0)
+data.snp.notvoc.2<-reshape2::melt(data.snp.notvoc.2, id.vars = "run_sample")
+data.snp.notvoc.2<-data.snp.notvoc.2 %>% dplyr::filter(run_sample != "NA" & value==0)
 data.snp.notvoc.2$run_sample_POS<-paste0(data.snp.notvoc.2$run_sample, "_", parse_number(as.character(data.snp.notvoc.2$variable)))
 # Add missing depth: 2. Extract missing depths
 depth.snp.notvoc<-depth %>% filter(run_sample_POS %in% unique(data.snp.notvoc.2$run_sample_POS))
