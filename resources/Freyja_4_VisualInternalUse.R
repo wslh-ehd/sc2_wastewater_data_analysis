@@ -28,8 +28,8 @@ samplesinfo$samples<-paste0(samplesinfo$Run, "@", samplesinfo$FilesNames)
 # Set (new) variables
 samplesinfo <- samplesinfo %>% rename(sites = Location)
 samplesinfo$Date<-as.Date(as.numeric(as.character(samplesinfo$Date)), origin = "1899-12-30")
-samplesinfo$Date<-as.Date(samplesinfo$Date, "%m%d%y")
-samplesinfo$Samples<-paste0(samplesinfo$sites, "_", samplesinfo$date)
+samplesinfo$Date[samplesinfo$Sample.type=="Control"] <- Sys.Date()  # Add "today's date" to all Controls
+
 
 # Select "Samples" 
 samplesinfo<-samplesinfo %>% filter(samples != "NA")
