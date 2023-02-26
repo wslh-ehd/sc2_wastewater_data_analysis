@@ -1,6 +1,10 @@
 #!/bin/bash
 
 
+# Prerequisites
+workflow="all"
+
+
 # Help
 usage() { printf "Usage: $0 \n[-w <string> Workflow to use (default: 'all'): ""'freyja' (process all demix files in SARS-CoV-2 directory), 'database' (process all samples in the SARS-CoV-2 directory), 'all' (freyja & database),  'database_freyja_run' (process all samples in the SARS-CoV-2 directory and process demix files only in the specified SequencingID run)""]\n[-o <string> Output directory in 'Results' (example: ""'2023-01-03'"")]\n[-s <string> (if 'freyja_run' specified) SequencingID (example: ""'Seq078'"")]\n" 1>&2; exit 1; }
 
@@ -28,14 +32,14 @@ shift $((OPTIND-1))
 
 
 # Check the specified directory exists
-if [ ! -d /scratch/projects/SARS-CoV-2/Results/$output/ ]; then
+if [[ ! -d /scratch/projects/SARS-CoV-2/Results/$output/ ]] ; then
             printf "\n'The directory $output does not exist! Please indicate an output directory (-o)\n\n"
             usage
     fi
 
 
 # Check a workflow is correctly defined
-if [ $workflow != "all" ] && [ $workflow != "database" ] && [ $workflow != "freyja" ] && [ $workflow != "database_freyja_run" ]; then
+if [[ $workflow != "all" ]] && [[ $workflow != "database" ]] && [[ $workflow != "freyja" ]] && [[ $workflow != "database_freyja_run" ]]; then
     printf "\nWorkflow not (properly) defined\n\n"
     usage
 fi
@@ -43,7 +47,7 @@ fi
 
 
 # Check that all arguments are correctly defined if 'freyja_run' is selected
-if [ $workflow == "database_freyja_run" ]; then
+if [[ $workflow == "database_freyja_run" ]]; then
     if [ -z $seq_folder ]; then
         printf "\n'freyja_run' workflow has been selected, but no SequencingID run (-s) have been defined. Sad :-(\n\n"
         usage
@@ -70,7 +74,7 @@ cp "$0" /scratch/projects/SARS-CoV-2/Results/$output/archive/.
 #########################################################################################
 
 
-if [ $workflow == "database" ] || [ $workflow == "database_freyja_run" ] || [ $workflow == "all" ]; then
+if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || [[ $workflow == "all" ]]; then
 
 
     # Update data
@@ -87,6 +91,9 @@ if [ $workflow == "database" ] || [ $workflow == "database_freyja_run" ] || [ $w
 
     # Analysis
     cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
+
+    cp ../ListSamples.xlsx .
+
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
 
@@ -103,7 +110,7 @@ fi
 #########################################################################################
 
 
-if [ $workflow == "freyja" ] || [ $workflow == "all" ]; then
+if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
 
 
     cd /scratch/projects/SARS-CoV-2/
@@ -119,6 +126,8 @@ if [ $workflow == "freyja" ] || [ $workflow == "all" ]; then
 
     # Process data for visualization
     cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
+
+    cp ../ListSamples.xlsx .
 
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
@@ -138,7 +147,7 @@ fi
 #########################################################################################
 
 
-if [ $workflow == "database_freyja_run" ] ; then
+if [[ $workflow == "database_freyja_run" ]] ; then
 
     cd /scratch/projects/SARS-CoV-2/
 
@@ -154,6 +163,8 @@ if [ $workflow == "database_freyja_run" ] ; then
 
     # Process data for visualization
     cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
+
+    cp ../ListSamples.xlsx .
 
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
