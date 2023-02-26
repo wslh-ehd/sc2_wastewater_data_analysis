@@ -26,7 +26,7 @@ fi
 
 
 
-cd /scratch/projects/SARS-CoV-2/Results/$output/database/
+cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
 
 
 ### Display dashboard's visuals
