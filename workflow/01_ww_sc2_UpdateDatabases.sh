@@ -132,8 +132,8 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	curl -o Freyja_1_Aggregate.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_1_Aggregate.R
 	curl -o Freyja_2_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Usher_to_NextstrainWHO.R
 	curl -o Freyja_3_Prep_visual.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_3_Prep_visual.R
-	curl -o Freyja_4_VisualInternalUse.txt https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_4_VisualInternalUse.txt
-	curl -o Freyja_5_Dashboard.txt https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_5_Dashboard.txt
+	curl -o Freyja_4_VisualInternalUse.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_4_VisualInternalUse.R
+	curl -o Freyja_5_Dashboard.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_5_Dashboard.R
 	curl -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
 	wget https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json
 
