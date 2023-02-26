@@ -17,8 +17,8 @@ library(tidyverse)
 # Import data
 freyja <-read.table("freyja_plot.tsv", header = TRUE, sep = "\t")
 freyja.raw <-read.table("freyja_lineages_conversion_backup.tsv", header = TRUE, sep = "\t")
-samplesinfo<-read.xlsx("../ListSamples.xlsx", sheet="Samples", startRow = 3)
-runsinfo<-read.xlsx("../ListSamples.xlsx", sheet="Runs", startRow = 10)
+samplesinfo<-read.xlsx("ListSamples.xlsx", sheet="Samples", startRow = 3)
+runsinfo<-read.xlsx("ListSamples.xlsx", sheet="Runs", startRow = 10)
 
 # Merge three datasets
 runsinfo<-runsinfo[, c("Run", "QC_Run")]
