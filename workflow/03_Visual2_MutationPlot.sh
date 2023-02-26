@@ -7,7 +7,7 @@ usage() { printf "Usage: $0 \n\n[-o <string> Output directory in 'Results' (exam
 
 
 # Arguments
-while getopts ":s:o:" o; do
+while getopts ":o:" o; do
     case "${o}" in
         o)
             output=${OPTARG}
@@ -19,7 +19,7 @@ while getopts ":s:o:" o; do
 done
 shift $((OPTIND-1))
 
-if [[ (-z "${seq_folder}") || (-z "${output}") ]]; then
+if [[ (-z "${output}") ]]; then
     usage
 fi
 
