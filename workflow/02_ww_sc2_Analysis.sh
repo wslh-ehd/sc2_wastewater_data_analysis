@@ -76,12 +76,12 @@ if [ $workflow == "database" ] || [ $workflow == "database_freyja_run" ] || [ $w
     # Update data
     cd /scratch/projects/SARS-CoV-2/
 
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/output/*_depth.tsv > ./Results/$output/databases/CallDepthCompiled.tsv
-    sed -i 's/\/output\//\t/' ./Results/$output/databases/CallDepthCompiled.tsv
+    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/variants/ivar/*_depth.tsv > ./Results/$output/databases/CallDepthCompiled.tsv
+    sed -i 's/\/variants\/ivar\//\t/' ./Results/$output/databases/CallDepthCompiled.tsv
     sed -i 's/_depth.tsv//' ./Results/$output/databases/CallDepthCompiled.tsv
 
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/output/*_notfiltered.tsv > ./Results/$output/databases/CallVariantALLCompiled.tsv
-    sed -i 's/\/output\//\t/' ./Results/$output/databases/CallVariantALLCompiled.tsv
+    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/variants/ivar/*_notfiltered.tsv > ./Results/$output/databases/CallVariantALLCompiled.tsv
+    sed -i 's/\/variants\/ivar\//\t/' ./Results/$output/databases/CallVariantALLCompiled.tsv
     sed -i 's/_notfiltered.tsv//' ./Results/$output/databases/CallVariantALLCompiled.tsv
 
 
@@ -109,9 +109,9 @@ if [ $workflow == "freyja" ] || [ $workflow == "all" ]; then
     cd /scratch/projects/SARS-CoV-2/
     
     # Identify SNPs/barcodes
-    for variant in Seq*/output/freyja/*.tsv; do
+    for variant in Seq*/freyja/*.tsv; do
         depth=${variant/-variant.tsv/-depth}
-        out=${variant/-variant.tsv/}; out=${out/\/output\/freyja\//@};
+        out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
         echo $out
         docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
     done
@@ -143,9 +143,9 @@ if [ $workflow == "database_freyja_run" ] ; then
     cd /scratch/projects/SARS-CoV-2/
 
     # Identify SNPs/barcodes
-    for variant in $seq_folder/output/freyja/*.tsv; do
+    for variant in $seq_folder/freyja/*.tsv; do
         depth=${variant/-variant.tsv/-depth}
-        out=${variant/-variant.tsv/}; out=${out/\/output\/freyja\//@};
+        out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
         echo $out
         docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
         #freyja demix $variant $depth --output ./Results/$output/freyja/demix/$out-results.txt
