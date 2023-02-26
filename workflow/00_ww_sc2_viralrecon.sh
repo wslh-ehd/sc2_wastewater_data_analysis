@@ -90,7 +90,6 @@ rm -rf kraken2_human_and_phiX_db
 
 ## Copy/Extract depth and all mutations info and put all results in one place
 printf 'Viralrecon workflow is done!\n\n\nNow, it is time to gather all important files into the "output" directory\n\n'
-mkdir freyja
 
 
 ## Extract depth and copy into the ivar directory
@@ -125,6 +124,7 @@ docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/ivar:latest \
  
 ## Freyja: Identify SNPs
 printf 'Create BAM files for Freyja into the "freyja" directory\n\n'
+mkdir freyja
 for sample in ./variants/bowtie2/*.ivar_trim.sorted.bam; do
 out=${sample/.ivar_trim.sorted.bam/}; out=${out/\.\/variants\/bowtie2\//}
 docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
