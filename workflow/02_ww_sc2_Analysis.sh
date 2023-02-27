@@ -6,7 +6,7 @@ workflow="all"
 
 
 # Help
-usage() { printf "Usage: $0 \n[-w <string> Workflow to use (default: 'all'): ""'freyja' (process all demix files in SARS-CoV-2 directory), 'database' (process all samples in the SARS-CoV-2 directory), 'all' (freyja & database),  'database_freyja_run' (process all samples in the SARS-CoV-2 directory and process demix files only in the specified SequencingID run)""]\n[-o <string> Output directory in 'Results' (example: ""'2023-01-03'"")]\n[-s <string> (if 'freyja_run' specified) SequencingID (example: ""'Seq078'"")]\n" 1>&2; exit 1; }
+usage() { printf "Usage: $0 \n[-w <string> Workflow to use (default: 'all'): ""'freyja' (process all demix files in SARS-CoV-2 directory), 'database' (process all samples in the SARS-CoV-2 directory), 'all' (freyja & database),  'database_freyja_run' (process all samples in the SARS-CoV-2 directory and process demix files only in the specified SequencingID run), 'final_analysis' (perform final analysis for both database and freyja)""]\n[-o <string> Output directory in 'Results' (example: ""'2023-01-03'"")]\n[-s <string> (if 'freyja_run' specified) SequencingID (example: ""'Seq078'"")]\n" 1>&2; exit 1; }
 
 
 
@@ -39,7 +39,7 @@ if [[ ! -d /scratch/projects/SARS-CoV-2/Results/$output/ ]] ; then
 
 
 # Check a workflow is correctly defined
-if [[ $workflow != "all" ]] && [[ $workflow != "database" ]] && [[ $workflow != "freyja" ]] && [[ $workflow != "database_freyja_run" ]]; then
+if [[ $workflow != "all" ]] && [[ $workflow != "database" ]] && [[ $workflow != "freyja" ]] && [[ $workflow != "database_freyja_run" ]] && [[ $workflow != "final_analysis" ]] ; then
     printf "\nWorkflow not (properly) defined\n\n"
     usage
 fi
@@ -87,8 +87,12 @@ if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || 
     awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/variants/ivar/*_notfiltered.tsv > ./Results/$output/databases/CallVariantALLCompiled.tsv
     sed -i 's/\/variants\/ivar\//\t/' ./Results/$output/databases/CallVariantALLCompiled.tsv
     sed -i 's/_notfiltered.tsv//' ./Results/$output/databases/CallVariantALLCompiled.tsv
+fi
 
 
+
+
+if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || [[ $workflow == "all" ]] || [[ $workflow == "final_analysis" ]] ; then
     # Analysis
     cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
 
@@ -96,7 +100,6 @@ if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || 
 
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
-
 
 fi
 
@@ -110,6 +113,10 @@ fi
 #########################################################################################
 
 
+
+
+##### Freyja - process all samples in Seq* folders
+
 if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
 
 
@@ -122,30 +129,12 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
         echo $out
         docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
     done
-
-
-    # Process data for visualization
-    cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
-
-    cp ../ListSamples.xlsx .
-
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
-
 fi
 
 
 
 
-
-
-#########################################################################################
 ##### Freyja - if just want to process data for a specific sequencing run
-#########################################################################################
-
 
 if [[ $workflow == "database_freyja_run" ]] ; then
 
@@ -159,7 +148,14 @@ if [[ $workflow == "database_freyja_run" ]] ; then
         docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
         #freyja demix $variant $depth --output ./Results/$output/freyja/demix/$out-results.txt
     done
+fi
 
+
+
+
+##### Freyja - curation data and visual preparations
+
+if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "final_analysis" ]] || [[ $workflow == "database_freyja_run" ]] ; then
 
     # Process data for visualization
     cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
@@ -171,7 +167,6 @@ if [[ $workflow == "database_freyja_run" ]] ; then
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
     docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
-
 
 fi
 
