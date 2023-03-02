@@ -52,8 +52,6 @@ printf "Parameters used:-w $workflow -o $output\n"
 #########################################################################################
 cd /scratch/projects/SARS-CoV-2/Results/
 mkdir -p $output
-mkdir -p $output/freyja/
-mkdir -p $output/databases/
 mkdir -p $output/archive/
 
 
@@ -76,6 +74,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 
 
 	## Set working directory
+	mkdir -p $output/databases/
 	cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
 
 
@@ -118,8 +117,8 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 
 
 	## Set working directory
+	mkdir -p $output/freyja/
 	cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
-	mkdir ./bootstraps/
 
 
 	# Log
