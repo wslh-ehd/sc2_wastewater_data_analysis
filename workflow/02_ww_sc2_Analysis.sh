@@ -121,6 +121,7 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
 
 
     cd /scratch/projects/SARS-CoV-2/
+    mkdir ./Results/$output/bootstraps/
     
     # Identify SNPs/barcodes
     for variant in Seq*/freyja/*.tsv; do
@@ -139,6 +140,7 @@ fi
 if [[ $workflow == "database_freyja_run" ]] ; then
 
     cd /scratch/projects/SARS-CoV-2/
+    mkdir ./Results/$output/bootstraps/
 
     # Identify SNPs/barcodes
     for variant in $seq_folder/freyja/*.tsv; do
