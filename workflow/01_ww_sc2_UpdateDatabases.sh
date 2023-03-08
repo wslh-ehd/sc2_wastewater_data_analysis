@@ -117,7 +117,8 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 
 
 	## Set working directory
-	mkdir -p $output/freyja/
+	cd /scratch/projects/SARS-CoV-2/Results/$output/
+	mkdir -p freyja
 	cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
 
 
