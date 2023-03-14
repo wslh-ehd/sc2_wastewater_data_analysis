@@ -115,7 +115,7 @@ extract_lineages_info <-function(x, output) {
 #### Config ##########################################################
 
 # Authenticate yourself
-outbreakinfo::authenticateUser()
+# outbreakinfo::authenticateUser()
 
 
 # Set frequency of the mutation in the population
