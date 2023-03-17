@@ -6,7 +6,7 @@ workflow="all"
 
 
 # Help
-usage() { printf "Usage: $0 \n[-w <string> Workflow to use (default: 'all'): ""'freyja' (process all demix files in SARS-CoV-2 directory), 'database' (process all samples in the SARS-CoV-2 directory), 'all' (freyja & database),  'database_freyja_run' (process all samples in the SARS-CoV-2 directory and process demix files only in the specified SequencingID run), 'final_analysis' (perform final analysis for both database and freyja)""]\n[-o <string> Output directory in 'Results' (example: ""'2023-01-03'"")]\n[-s <string> (if 'freyja_run' specified) SequencingID (example: ""'Seq078'"")]\n" 1>&2; exit 1; }
+usage() { printf "Usage: \n[-w <string> Workflow to use (default: 'all'): ""'freyja' (process all demix files in SARS-CoV-2 directory), 'database' (process all samples in the SARS-CoV-2 directory), 'all' (freyja & database),  'database_freyja_run' (process all samples in the SARS-CoV-2 directory and process demix files only in the specified SequencingID run), 'final_analysis' (perform final analysis for both database and freyja)""]\n[-o <string> Output directory in 'Results' (example: ""'2023-01-03'"")]\n[-s <string> (if 'freyja_run' specified) SequencingID (example: ""'Seq078'"")]\n" 1>&2; exit 1; }
 
 
 
@@ -98,8 +98,8 @@ if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || 
 
     cp ../ListSamples.xlsx .
 
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
 
 fi
 
@@ -164,11 +164,11 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "f
 
     cp ../ListSamples.xlsx .
 
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
-    docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
 
 fi
 
