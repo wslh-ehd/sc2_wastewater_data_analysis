@@ -86,7 +86,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 	curl -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
 	cp /scratch/projects/SARS-CoV-2/Workflow/Database_Outbreak_VoC_to_explore.txt .
 
-	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_0_*.R | tee ../archive/R_database_0.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_0_*.R | tee ../archive/R_database_0.log
 
 	git clone https://github.com/hodcroftlab/covariants.git
 	awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ./covariants*/defining_mutations/*.tsv > covariant_mutations.tsv 
@@ -96,7 +96,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 
 
 	## Generate databases
-	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Database_1_*.R | tee ../archive/R_database_1.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_1_*.R | tee ../archive/R_database_1.log
 
 
 
@@ -137,7 +137,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	curl -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/data/nameTable.json
 	wget https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json
 
-	docker run --rm=True -ti -v $PWD:/data -u $(id -u):$(id -g) r/dashboard:lastest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
 
 
 	# Update freyja reference database
