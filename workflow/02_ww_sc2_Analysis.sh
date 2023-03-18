@@ -96,7 +96,7 @@ if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || 
     # Analysis
     cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
 
-    cp ../ListSamples.xlsx .
+    cp ../archive/ListSamples.xlsx .
 
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
@@ -162,7 +162,7 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "f
     # Process data for visualization
     cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
 
-    cp ../ListSamples.xlsx .
+    cp ../archive/ListSamples.xlsx .
 
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
