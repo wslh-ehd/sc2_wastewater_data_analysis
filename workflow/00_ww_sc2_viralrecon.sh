@@ -62,7 +62,7 @@ cp "$0" script_prep_viralrecon.sh
 
 ## Run viralrecon
 printf "Sequences processing using viralrecon (nextflow) workflow\n\n" 
-nextflow pull nf-core/viralrecon # Make sure viralrecon is up to date 
+nextflow pull nf-core/viralrecon -r 2.5 # Pul viralrecon 2.5
 nextflow run nf-core/viralrecon --input samplesheet_$seq_folder.csv \
 	--outdir /scratch/projects/SARS-CoV-2/$seq_folder/ \
 	--platform illumina \
