@@ -14,7 +14,7 @@ check.integer <- function(N){!grepl("[^[:digit:]]", format(N,  digits = 20, scie
 #################################################################################               
 #################################################################################               
 # Config
-interval.to.investigate = 3
+interval.to.investigate = 2
 
 
 
