@@ -53,8 +53,9 @@ mv /scratch/projects/SARS-CoV-2/CopyFastqHere/samplesheet.csv samplesheet_$seq_f
 # Download viralrecon config file
 curl -o custom_ww_viralrecon.config https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/custom_ww_viralrecon.config
 # Download kraken2 (human + phiX) database  - workflow to obtain the files described here: entire workflow to generate these files: https://hackmd.io/@AstrobioMike/kraken2-read-filtering#Download-database-as-built-on-11-Sept-2020-LATEST
-curl -L -o kraken2_human_and_phiX_db.tar.gz https://ndownloader.figshare.com/files/24658262 
-tar -xzvf kraken2_human_and_phiX_db.tar.gz
+#curl -L -o kraken2_human_and_phiX_db.tar.gz https://ndownloader.figshare.com/files/24658262 
+#tar -xzvf kraken2_human_and_phiX_db.tar.gz
+cp -r /scratch/projects/database/kraken2_human_and_phiX_db ./kraken2_human_and_phiX_db
 # Save the current script into the output directory
 cp "$0" script_prep_viralrecon.sh
 
@@ -63,14 +64,14 @@ cp "$0" script_prep_viralrecon.sh
 ## Run viralrecon
 printf "Sequences processing using viralrecon (nextflow) workflow\n\n" 
 nextflow pull nf-core/viralrecon -r 2.5 # Pul viralrecon 2.5
-nextflow run nf-core/viralrecon --input samplesheet_$seq_folder.csv \
+nextflow run nf-core/viralrecon -r 2.5 --input samplesheet_$seq_folder.csv \
 	--outdir /scratch/projects/SARS-CoV-2/$seq_folder/ \
 	--platform illumina \
 	--protocol amplicon \
 	--genome MN908947.3 \
 	--primer_set qiaseq \
 	--primer_set_version '1' \
-	--kraken2_db /scratch/projects/SARS-CoV-2/$seq_folder/kraken2_human_and_phiX_db/ \
+	--kraken2_db ./kraken2_human_and_phiX_db/ \
 	--kraken2_db_name 'human_phiX' \
 	--kraken2_variants_host_filter true \
 	--skip_assembly \
@@ -79,7 +80,7 @@ nextflow run nf-core/viralrecon --input samplesheet_$seq_folder.csv \
 
 
 ## Remove kraken2 (human + phiX) database
-rm -rf kraken2_human_and_phiX_db.tar.gz
+#rm -rf kraken2_human_and_phiX_db.tar.gz
 rm -rf kraken2_human_and_phiX_db
 
 
