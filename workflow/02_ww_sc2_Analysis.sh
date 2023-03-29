@@ -130,6 +130,19 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
         echo $out
         docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
     done
+    
+    
+    
+    ### Run Freyja analysis on all recombinants
+    mkdir ./Results/$output/freyja/bootstraps_X/
+    
+    # Identify SNPs/barcodes
+    for variant in Seq*/freyja/*.tsv; do
+        depth=${variant/-variant.tsv/-depth}
+        out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
+        echo $out
+        docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps_X/$out --barcodes ./Results/$output/freyja/usher_barcodes.csv
+    done
 fi
 
 
