@@ -119,7 +119,7 @@ extract_lineages_info <-function(x, output) {
 
 
 # Set frequency of the mutation in the population
-mut.freq=0.75
+mut.freq=0.90
 
 # Minimum number of sequences observed in a lineage to consider this lineage as representative
 min.num.seq.in.lineage = 5
