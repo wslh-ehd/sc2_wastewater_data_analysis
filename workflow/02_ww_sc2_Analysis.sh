@@ -133,11 +133,11 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
     
     
     
-    ### Run Freyja analysis on all recombinants
+    ### Run Freyja analysis on all variants incl. all recombinants - 200 last samples
     mkdir ./Results/$output/freyja/bootstraps_X/
     
     # Identify SNPs/barcodes
-    for variant in Seq*/freyja/*.tsv; do
+    ls Seq*/freyja/*.tsv | tail -n 200 | while read variant; do 
         depth=${variant/-variant.tsv/-depth}
         out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
         echo $out
