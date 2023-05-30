@@ -260,6 +260,11 @@ all.variant = curated %>%
 all.variant<-all.variant %>% filter(!grepl("[*]", who_name))
 
 
+# Overwrite outbreak.info data (to keep classify Omicron as "Variant of Concern")
+row.overwrite<-which(all.variant$who_name %in% "Omicron")
+all.variant[row.overwrite, c("variantType")]<-"Variant of Concern"
+
+
 # List all lineages
 data.lineages<-apply(all.variant, 1, extract_lineages_info)
 data.lineages <- do.call("rbind", data.lineages)
