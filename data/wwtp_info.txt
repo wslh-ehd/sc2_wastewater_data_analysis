@@ -21,16 +21,16 @@ Marshfield	19316	54449
 Mauston	4500	53948
 Menomonie	16000	54751
 Merrill	10000	54452
-Madison	390880.8	53713
+Madison	391815	53713
 Monroe	10800	53566
 Oconomowoc	34135	53066
 Oregon	11400	53575
 Oshkosh	67000	54902
-MadisonP11	132989.1	
-MadisonP18	117029.8	
-MadisonP2	111594.3	
-MadisonP7	75074.58	
-MadisonP8	99747.73	
+MadisonP11	106791	
+MadisonP18	89139	
+MadisonP2	83127	
+MadisonP7	42734	
+MadisonP8	70024	
 Peshtigo	4000	54157
 Platteville	14000	53818
 Plymouth	9000	53073
