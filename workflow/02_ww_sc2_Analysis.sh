@@ -6,7 +6,7 @@ workflow="all"
 
 
 # Help
-usage() { printf "Usage: \n[-w <string> Workflow to use (default: 'all'): ""'freyja' (process all demix files in SARS-CoV-2 directory), 'database' (process all samples in the SARS-CoV-2 directory), 'all' (freyja & database),  'database_freyja_run' (process all samples in the SARS-CoV-2 directory and process demix files only in the specified SequencingID run), 'final_analysis' (perform final analysis for both database and freyja)""]\n[-o <string> Output directory in 'Results' (example: ""'2023-01-03'"")]\n[-s <string> (if 'freyja_run' specified) SequencingID (example: ""'Seq078'"")]\n" 1>&2; exit 1; }
+usage() { printf "Usage: \n[-w <string> Workflow to use (default: 'all'): ""'freyja' (process all demix files in SARS-CoV-2 directory), 'database' (process all samples in the SARS-CoV-2 directory), 'all' (freyja & database),  'freyja_run' (process all samples in the SARS-CoV-2 directory and process demix files only in the specified SequencingID run), 'final_analysis' (perform final analysis for both database and freyja)""]\n[-o <string> Output directory in 'Results' (example: ""'2023-01-03'"")]\n[-s <string> (if 'freyja_run' specified) SequencingID (example: ""'Seq078'"")]\n" 1>&2; exit 1; }
 
 
 
@@ -39,7 +39,7 @@ if [[ ! -d /scratch/projects/SARS-CoV-2/Results/$output/ ]] ; then
 
 
 # Check a workflow is correctly defined
-if [[ $workflow != "all" ]] && [[ $workflow != "database" ]] && [[ $workflow != "freyja" ]] && [[ $workflow != "database_freyja_run" ]] && [[ $workflow != "final_analysis" ]] ; then
+if [[ $workflow != "all" ]] && [[ $workflow != "database" ]] && [[ $workflow != "freyja" ]] && [[ $workflow != "freyja_run" ]] && [[ $workflow != "final_analysis" ]] ; then
     printf "\nWorkflow not (properly) defined\n\n"
     usage
 fi
@@ -47,7 +47,7 @@ fi
 
 
 # Check that all arguments are correctly defined if 'freyja_run' is selected
-if [[ $workflow == "database_freyja_run" ]]; then
+if [[ $workflow == "freyja_run" ]]; then
     if [ -z $seq_folder ]; then
         printf "\n'freyja_run' workflow has been selected, but no SequencingID run (-s) have been defined. Sad :-(\n\n"
         usage
@@ -74,7 +74,7 @@ cp "$0" /scratch/projects/SARS-CoV-2/Results/$output/archive/.
 #########################################################################################
 
 
-if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || [[ $workflow == "all" ]]; then
+if [[ $workflow == "database" ]] || [[ $workflow == "all" ]]; then
 
 
     # Update data
@@ -92,7 +92,7 @@ fi
 
 
 
-if [[ $workflow == "database" ]] || [[ $workflow == "database_freyja_run" ]] || [[ $workflow == "all" ]] || [[ $workflow == "final_analysis" ]] ; then
+if [[ $workflow == "database" ]] || [[ $workflow == "all" ]] || [[ $workflow == "final_analysis" ]] ; then
     # Analysis
     cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
 
@@ -150,7 +150,7 @@ fi
 
 ##### Freyja - if just want to process data for a specific sequencing run
 
-if [[ $workflow == "database_freyja_run" ]] ; then
+if [[ $workflow == "freyja_run" ]] ; then
 
     cd /scratch/projects/SARS-CoV-2/
     mkdir ./Results/$output/freyja/bootstraps/
@@ -170,7 +170,7 @@ fi
 
 ##### Freyja - curation data and visual preparations
 
-if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "final_analysis" ]] || [[ $workflow == "database_freyja_run" ]] ; then
+if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "final_analysis" ]] ; then
 
     # Process data for visualization
     cd /scratch/projects/SARS-CoV-2/Results/$output/freyja/
