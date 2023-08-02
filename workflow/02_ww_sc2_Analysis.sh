@@ -74,7 +74,7 @@ cp "$0" /scratch/projects/SARS-CoV-2/Results/$output/archive/.
 #########################################################################################
 
 
-if [[ $workflow == "database" ]] || [[ $workflow == "all" ]]; then
+if [[ $workflow == "database" ]] || [[ $workflow == "all" ]] ||  [[ $workflow == "database_freyja_run" ]] ; then
 
     # Update data
     cd /scratch/projects/SARS-CoV-2/
@@ -104,22 +104,6 @@ if [[ $workflow == "database" ]] || [[ $workflow == "all" ]] || [[ $workflow == 
 fi
 
 
-
-
-
-if [[ $workflow == "database_freyja_run" ]] ; then
-
-    # Update data
-    cd /scratch/projects/SARS-CoV-2/
-
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/variants/ivar/*_depth.tsv > ./Results/$output/databases/CallDepthCompiled.tsv
-    sed -i 's/\/variants\/ivar\//\t/' ./Results/$output/databases/CallDepthCompiled.tsv
-    sed -i 's/_depth.tsv//' ./Results/$output/databases/CallDepthCompiled.tsv
-
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/variants/ivar/*_notfiltered.tsv > ./Results/$output/databases/CallVariantALLCompiled.tsv
-    sed -i 's/\/variants\/ivar\//\t/' ./Results/$output/databases/CallVariantALLCompiled.tsv
-    sed -i 's/_notfiltered.tsv//' ./Results/$output/databases/CallVariantALLCompiled.tsv
-fi
 
 
 
