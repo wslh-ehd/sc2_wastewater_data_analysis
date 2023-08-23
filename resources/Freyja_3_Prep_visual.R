@@ -76,6 +76,8 @@ lineage.sub.voc<-lineage.backup %>% filter(original %in% lineage.sub.voc)
 lineage$Pango<-lineage$final
 
 
+lineage$final<-ifelse(lineage$original %in% ignore.name.lineages$Pango.1, lineage$original, lineage$final)
+lineage$Pango<-ifelse(lineage$original %in% ignore.name.lineages$Pango.1, lineage$original, lineage$Pango)
 
 
 #################################################################################
@@ -140,6 +142,14 @@ for(i in 1:nrow(taxo)){
   lineage.row<-lineage.row[which(lineage.row %in% other.row)]
   freyja.Lineage[lineage.row]<-taxo$WHO[i]
 }
+
+
+# Sort lineages (to ensure they are all well detected in the db)
+taxo.1<-arrange(taxo.1, desc(Lineage))
+# Add XBBs at the end
+XBB.rows<-which(taxo.1$Pango %like% "XBB")
+nonXBB.rows<-which(taxo.1$Pango %!like% "XBB")
+taxo.1<-rbind(taxo.1[nonXBB.rows,], taxo.1[XBB.rows, ])
 
 # Assigned lineages that are listed in "list.variants.with.sublineages" 
 ## 1
