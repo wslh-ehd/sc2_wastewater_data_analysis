@@ -51,3 +51,4 @@ Milwaukee (Jones Island)	470007	53207
 Milwaukee (South Shore)	615934	53154
 Waupaca	10000	54981
 Walworth	30000	53184
+Fond du Lac	63000	54935
