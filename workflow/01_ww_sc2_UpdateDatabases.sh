@@ -144,7 +144,8 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
 	    freyja update --outdir . # update lineage database https://github.com/andersen-lab/Freyja
 	# Remove recombinants, except XBB
-	awk '{ gsub("XBB","_X_B_B",$1); print $1 }' usher_barcodes.csv | grep -v "^X" | awk '{ gsub("_X_B_B","XBB",$1); print $1 }' > usher_barcodes_withRecombinantXBBonly.csv
+	awk '{ gsub("XBB","_X_B_B",$1); print $1 }' usher_barcodes.csv | grep -v "^X" | grep -v "^HW" | grep -v "^GT" | grep -v "^GL" | awk '{ gsub("_X_B_B","XBB",$1); print $1 }' > usher_barcodes_withRecombinantXBBonly.csv
+
 
 fi
 
