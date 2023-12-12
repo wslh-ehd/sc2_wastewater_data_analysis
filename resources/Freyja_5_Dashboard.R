@@ -11,25 +11,34 @@ library(tidyverse)
 library(hrbrthemes) #sudo apt -y install libfontconfig1-dev; sudo apt-get install libcairo2-dev
 library(sf)
 library(zipcodeR)
+library(googlesheets4)
 
 '%!in%' <- function(x,y)!('%in%'(x,y)) 
 '%!like%' <- function(x,y)!('%like%'(x,y)) 
+is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))
+
 
 
 
 ################################################################################
 ######## Import data 
 ################################################################################
+
+# Import sequencing related data
 freyja <-read.table("freyja_plot.tsv", header = TRUE, sep = "\t")
 samplesinfo<-read.xlsx("ListSamples.xlsx", sheet="Samples", startRow = 3)
 runsinfo<-read.xlsx("ListSamples.xlsx", sheet="Runs", startRow = 10)
 wwtp.info<-read.table(url("https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/wwtp_info.txt"), h=T, sep = "\t")
 
+# Import SARS-CoV-2 loads related data
+load("./SARSCoV2concentrationData.RData")
+
 ################################################################################
 ######## Preparation 
 ################################################################################
 
-# Merge run and sample metadata
+# Merge run and sample metadata0
 runsinfo<-runsinfo[, c("Run", "QC_Run")]
 samplesinfo <- left_join(samplesinfo, runsinfo, by=c("Run"))
 samplesinfo$samples<-paste0(samplesinfo$Run, "@", samplesinfo$FilesNames)
@@ -60,11 +69,64 @@ samplesinfo$WEEKID<-ifelse((samplesinfo$week %% 2) == 0,
                                   paste0(samplesinfo$year, "_", samplesinfo$week)))
 samplesinfo$weekID<-ifelse((samplesinfo$week %% 2) == 0, samplesinfo$week-1, samplesinfo$week)
 
-
 # Merge Freyja and SampleInfo
 freyja <- left_join(freyja, samplesinfo, by=c("samples"))
 freyja<-freyja %>% drop_na(Run)
 
+
+
+
+################################################################################
+######## Estimation of the SARS levels
+################################################################################
+
+# Preparation
+data.SARS.level.MKE<-data.SARS.level.MKE |>
+  dplyr::mutate(Date = as.Date(sample_collect_date, format="%m/%d/%Y")) |>
+  dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
+  
+data.SARS.level.WSLH<-data.SARS.level.WSLH |>
+  dplyr::mutate(Date = as.Date(sample_collect_date_stop, format="%Y-%m-%d")) |>
+  dplyr::filter(!grepl("not representative", tolower(wwtp_comments)), 
+                pcr_target_avg_conc >= 0,
+                sample_location == "wwtp") |>
+  dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
+
+# Merge MKE + WSLH SARS-levels datasets
+data.SARS.level <- rbind(data.SARS.level.MKE, data.SARS.level.WSLH) |>
+  dplyr::filter(pcr_gene_target %in% c("n1", "n2")) %>%
+  dplyr::mutate(week = as.numeric(as.character(strftime(Date, format = "%V"))),
+                weekID = ifelse((week %% 2) == 0, week-1, week),
+                year = format(as.Date(Date), "%Y"))
+
+# Add population size
+wwtp.info.levels <- wwtp.info.levels |>
+  dplyr::select(wwtp_GenomicDashboard, wwtp_HorizonExtract, PopulationServed) |> 
+  dplyr::rename(City = wwtp_GenomicDashboard,
+                wwtp_name = wwtp_HorizonExtract) |>
+  distinct()
+
+data.SARS.level <- left_join(data.SARS.level, wwtp.info.levels, by=c("wwtp_name"))
+
+
+# Aggregate the data bi-weekly
+data.SARS.level.summarized <- data.SARS.level %>%
+  dplyr::group_by(as.factor(sample_id), City, weekID, year) %>%
+  dplyr::summarise(sars = (exp(mean(log(pcr_target_avg_conc))) * mean(flow_rate) * 3.7854*1e6 )/ mean(PopulationServed),
+                   .groups = 'drop')
+data.SARS.level.summarized.state <- data.SARS.level.summarized %>%
+  dplyr::group_by(weekID, year) %>%
+  dplyr::summarise(sars.per.week = mean(sars, na.rm = TRUE),
+                   .groups = 'drop') %>%
+  dplyr::mutate(City = "All cities combined")
+
+data.SARS.level.summarized.state[is.nan(data.SARS.level.summarized.state)] <- 0
+data.SARS.level.summarized.cities <- data.SARS.level.summarized %>%
+  dplyr::group_by(weekID, year, City) %>%
+  dplyr::summarise(sars.per.week = mean(sars, na.rm = TRUE),
+                   .groups = 'drop')
+data.SARS.level.summarized.cities[is.nan(data.SARS.level.summarized.cities)] <- 0
+data.SARS.level.summarized<-rbind(data.SARS.level.summarized.state, data.SARS.level.summarized.cities)
 
 
 
@@ -115,8 +177,10 @@ freyja.all.biweekly$Date<-parse_date_time(paste(freyja.all.biweekly$year, freyja
 freyja.all.biweekly$City<-"All cities combined"
 freyja.all.biweekly$hoover<-paste0("weeks ", freyja.all.biweekly$weekID, "-", freyja.all.biweekly$weekID+1, " (starting ", format(freyja.all.biweekly$Date, format="%b %d, %y"), ")<br>",
                                    freyja.all.biweekly$Lineage, "<br>",
-                                   round(freyja.all.biweekly$proportion, 1), "% <br>Average between ",
+                                   round(freyja.all.biweekly$proportion, 1), "% <br>Average of ",
                                    round(freyja.all.biweekly$Total, 0), " sample(s)")
+
+
 
 
 ################################################################################
@@ -170,7 +234,7 @@ freyja.city.biweekly$n<-freyja.city.biweekly$Total/100
 freyja.city.biweekly$City<-freyja.city.biweekly$sites
 freyja.city.biweekly$hoover<-paste0("weeks ", freyja.city.biweekly$weekID, "-", freyja.city.biweekly$weekID+1, " (starting ", format(freyja.city.biweekly$Date, format="%b %d, %y"), ")<br>",
                                     freyja.city.biweekly$Lineage, "<br>",
-                                    round(freyja.city.biweekly$proportion, 1), "% <br>Average between ",
+                                    round(freyja.city.biweekly$proportion, 1), "% <br>Average of ",
                                     round(freyja.city.biweekly$Total, 0), " sample(s)")
 
 
@@ -194,6 +258,8 @@ freyja.barplot<-rbind(freyja.all.biweekly[, c("weekID", "year", "Lineage", "prop
 
 old.lvl<-levels(as.factor(freyja.barplot$Lineage))
 freyja.barplot$Lineage<-factor(freyja.barplot$Lineage, levels=c("Other", sort(old.lvl[old.lvl!="Other"], decreasing=T)))
+freyja.barplot<-dplyr::left_join(freyja.barplot, data.SARS.level.summarized, by=c("weekID", "year", "City"))
+
 colors.plot<-c(colors.grey, rev(colors[1:length(old.lvl)-1]))
 #scales::show_col(colors.plot)
 colors.plot.barplot<-colors.plot
