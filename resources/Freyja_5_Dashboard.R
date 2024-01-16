@@ -11,10 +11,11 @@ library(tidyverse)
 library(hrbrthemes) #sudo apt -y install libfontconfig1-dev; sudo apt-get install libcairo2-dev
 library(sf)
 library(zipcodeR)
-library(googlesheets4)
+
 
 '%!in%' <- function(x,y)!('%in%'(x,y)) 
 '%!like%' <- function(x,y)!('%like%'(x,y)) 
+'geometric_mean' <- function(x,na.rm=TRUE) { exp(mean(log(x),na.rm=na.rm)) }
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
@@ -112,18 +113,18 @@ data.SARS.level <- left_join(data.SARS.level, wwtp.info.levels, by=c("wwtp_name"
 # Aggregate the data bi-weekly
 data.SARS.level.summarized <- data.SARS.level %>%
   dplyr::group_by(as.factor(sample_id), City, weekID, year) %>%
-  dplyr::summarise(sars = (exp(mean(log(pcr_target_avg_conc))) * mean(flow_rate) * 3.7854*1e6 )/ mean(PopulationServed),
+  dplyr::summarise(sars = (geometric_mean(pcr_target_avg_conc+1, na.rm = TRUE) * mean(flow_rate) * 3.7854*1e6 )/ mean(PopulationServed),
                    .groups = 'drop')
 data.SARS.level.summarized.state <- data.SARS.level.summarized %>%
   dplyr::group_by(weekID, year) %>%
-  dplyr::summarise(sars.per.week = mean(sars, na.rm = TRUE),
+  dplyr::summarise(sars.per.week = geometric_mean(sars+1, na.rm = TRUE),
                    .groups = 'drop') %>%
   dplyr::mutate(City = "All cities combined")
 
 data.SARS.level.summarized.state[is.nan(data.SARS.level.summarized.state)] <- 0
 data.SARS.level.summarized.cities <- data.SARS.level.summarized %>%
   dplyr::group_by(weekID, year, City) %>%
-  dplyr::summarise(sars.per.week = mean(sars, na.rm = TRUE),
+  dplyr::summarise(sars.per.week = geometric_mean(sars+1, na.rm = TRUE),
                    .groups = 'drop')
 data.SARS.level.summarized.cities[is.nan(data.SARS.level.summarized.cities)] <- 0
 data.SARS.level.summarized<-rbind(data.SARS.level.summarized.state, data.SARS.level.summarized.cities)
