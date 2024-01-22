@@ -123,12 +123,20 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
     mkdir ./Results/$output/freyja/bootstraps/
     
     # Identify SNPs/barcodes
-    for variant in Seq*/freyja/*.tsv; do
-        depth=${variant/-variant.tsv/-depth}
-        out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
-        echo $out
-        docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
-    done
+    
+    # Less1Year_SeqRuns=$(find Seq*/fastq -type d -mtime -365 | cut -f1 -d"/" | uniq | tr " " "\n" )
+    # echo $Less1Year_SeqRuns > Results/2022-01-01_FreyjaFiles_DoNotTouch/Less1Year_SeqRuns.txt
+    # sed -i 's/\s\+/\n/g' Results/2022-01-01_FreyjaFiles_DoNotTouch/Less1Year_SeqRuns.txt
+    
+    while read -r line; do
+        for variant in $line/freyja/*.tsv; do
+            depth=${variant/-variant.tsv/-depth}
+            out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
+            echo $out
+            docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
+        done
+    done < ./Results/2022-01-01_FreyjaFiles_DoNotTouch/Less1Year_SeqRuns.txt
+
     
     
     
