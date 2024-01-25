@@ -83,7 +83,7 @@ freyja<-freyja %>% drop_na(Run)
 
 # Preparation
 data.SARS.level.MKE<-data.SARS.level.MKE |>
-  dplyr::mutate(Date = as.Date(sample_collect_date, format="%m/%d/%Y")) |>
+  dplyr::mutate(Date = as.Date(sample_collect_date, format="%Y-%m-%d")) |>
   dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
   
 data.SARS.level.WSLH<-data.SARS.level.WSLH |>
