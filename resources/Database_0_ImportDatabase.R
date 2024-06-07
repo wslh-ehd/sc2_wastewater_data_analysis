@@ -8,14 +8,13 @@ library(jsonlite)
 library(dplyr)
 library(data.table)
 library(tidyr)
-library(outbreakinfo)
-'%!like%' <- function(x,y)!('%like%'(x,y)) 
+
 
 
 ######################################################################
 ######################################################################
 #### Functions #######################################################
-
+'%!like%' <- function(x,y)!('%like%'(x,y)) 
 '%!in%' <- function(x,y)!('%in%'(x,y)) 
 
 
@@ -176,7 +175,8 @@ genome$genePOS<-paste0(genome$gene, ":", genome$aa.pos)
 ##########################################################################################################
 
 # Query the API
-response <- fromJSON("https://lapis.cov-spectrum.org/open/v1/sample/aggregated?fields=pangoLineage")
+response <- fromJSON("https://lapis.cov-spectrum.org/open/v2/sample/aggregated?fields=pangoLineage")
+
 # Check for errors
 errors <- response$errors
 if (length(errors) > 0) {
@@ -193,8 +193,8 @@ data.lineages <- response$data
 
 # Selection (no NA and only look for lineages with a minimum of representative genomes)
 data.lineages <- data.lineages %>% na.omit()
-data.lineages <- data.lineages %>% filter(count >= min.num.seq.in.lineage)
-
+data.lineages <- data.lineages %>% dplyr::filter(count >= min.num.seq.in.lineage)
+data.lineages <- data.lineages %>% dplyr::select(pangoLineage, count)
 
 
 
@@ -203,10 +203,12 @@ data.lineages <- data.lineages %>% filter(count >= min.num.seq.in.lineage)
 ##########################################################################################################
 
 ## Pangolin
-query.nt<-paste0("https://lapis.cov-spectrum.org/open/v1/sample/nuc-mutations?countryExposure=USA&minProportion=", mut.freq, "&pangoLineage=")
-query.aa<-paste0("https://lapis.cov-spectrum.org/open/v1/sample/aa-mutations?countryExposure=USA&minProportion=", mut.freq, "&pangoLineage=")
-query.nt.notUSA<-paste0("https://lapis.cov-spectrum.org/open/v1/sample/nuc-mutations?minProportion=", mut.freq, "&pangoLineage=")
-query.aa.notUSA<-paste0("https://lapis.cov-spectrum.org/open/v1/sample/aa-mutations?minProportion=", mut.freq, "&pangoLineage=")
+query.nt<-paste0("https://lapis.cov-spectrum.org/open/v2/sample/nucleotideMutations?countryExposure=USA&minProportion=", mut.freq, "&pangoLineage=")
+query.aa<-paste0("https://lapis.cov-spectrum.org/open/v2/sample/aminoAcidMutations?countryExposure=USA&minProportion=", mut.freq, "&pangoLineage=")
+query.nt.notUSA<-paste0("https://lapis.cov-spectrum.org/open/v2/sample/nucleotideMutations?minProportion=", mut.freq, "&pangoLineage=")
+query.aa.notUSA<-paste0("https://lapis.cov-spectrum.org/open/v2/sample/aminoAcidMutations?minProportion=", mut.freq, "&pangoLineage=")
+
+
 number.lineage<-nrow(data.lineages); count_loop = 0
 
 data.mutations<-apply(data.lineages, 1, extract_mutations_info)
@@ -227,8 +229,9 @@ write.table(lineages.not.found, "database_MutationsNotFoundLineages.tsv", sep = 
 
 
 ## Nextstrain
-query.nt<-paste0("https://lapis.cov-spectrum.org/open/v1/sample/nuc-mutations?&minProportion=", mut.freq, "&nextcladePangoLineage=")
-query.aa<-paste0("https://lapis.cov-spectrum.org/open/v1/sample/aa-mutations?&minProportion=", mut.freq, "&nextcladePangoLineage=")
+query.nt<-paste0("https://lapis.cov-spectrum.org/open/v2/sample/nucleotideMutations?&minProportion=", mut.freq, "&nextcladePangoLineage=")
+query.aa<-paste0("https://lapis.cov-spectrum.org/open/v2/sample/aminoAcidMutations?&minProportion=", mut.freq, "&nextcladePangoLineage=")
+
 data.lineage.ns<-data.frame(pangoLineage = VoC.variant.force,
                             count = 1)
 number.lineage<-nrow(data.lineage.ns); count_loop = 0
