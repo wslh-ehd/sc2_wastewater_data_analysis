@@ -54,4 +54,5 @@ Sauk Prairie	8000	53583
 Waupaca	10000	54981
 Walworth	30000	53184
 Fond du Lac	63000	54935
-City	Population	Zipcode
+#City	Population	Zipcode
+#
