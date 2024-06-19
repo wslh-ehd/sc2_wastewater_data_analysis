@@ -8,8 +8,8 @@ Columbus	7000	53925
 Eau Claire	75000	54703
 Green Bay	189000	54302
 Hartford	15200	53027
-Hudson	2375	54843
-Hayward	19680	54016
+Hayward	2375	54843
+Hudson	19680	54016
 Janesville	63500	53548
 Kenosha	122000	53143
 Keshena	2500	54135
