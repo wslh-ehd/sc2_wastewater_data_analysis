@@ -82,10 +82,14 @@ freyja<-freyja %>% drop_na(Run)
 ################################################################################
 
 # Preparation
-data.SARS.level.MKE<-data.SARS.level.MKE |>
+data.SARS.level.UWM<-data.SARS.level.UWM |>
   dplyr::mutate(Date = as.Date(sample_collect_date, format="%Y-%m-%d")) |>
   dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
   
+data.SARS.level.MDH<-data.SARS.level.MDH |>
+  dplyr::mutate(Date = as.Date(sample_collect_date, format="%Y-%m-%d")) |>
+  dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
+
 data.SARS.level.WSLH<-data.SARS.level.WSLH |>
   dplyr::mutate(Date = as.Date(sample_collect_date_stop, format="%Y-%m-%d")) |>
   dplyr::filter(!grepl("not representative", tolower(wwtp_comments)), 
@@ -94,7 +98,7 @@ data.SARS.level.WSLH<-data.SARS.level.WSLH |>
   dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
 
 # Merge MKE + WSLH SARS-levels datasets
-data.SARS.level <- rbind(data.SARS.level.MKE, data.SARS.level.WSLH) |>
+data.SARS.level <- rbind(data.SARS.level.UWM, data.SARS.level.MDH, data.SARS.level.WSLH) |>
   dplyr::filter(pcr_gene_target %in% c("n1", "n2")) %>%
   dplyr::mutate(week = as.numeric(as.character(strftime(Date, format = "%V"))),
                 weekID = ifelse((week %% 2) == 0, week-1, week),
