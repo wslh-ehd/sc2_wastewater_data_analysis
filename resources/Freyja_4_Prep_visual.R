@@ -2,40 +2,23 @@ rm(list=ls(all=FALSE))
 ls()
 set.seed(123)
 
+require(tidyverse)
+'%!in%' <- function(x,y)!('%in%'(x,y)) 
+
+
+
 
 #################################################################################
-#setwd("/scratch/projects/SARS-CoV-2/Results/2022-10-20_removeRecombinant/freyja/")
 
 # Variant discarded if porportion below this threshold
 min.proportion = 1 # 0-100
 
-# WHO lineages with sublineages to display on the dashboard 
-list.variants.with.sublineages<-c("Omicron", "Add lineage here")
-
-# List sublineages
+# # List sublineages
 replace.lineages<-data.frame(Pango=c("B.1.1.529", "Add lineage here"),
                              WHO=c("Omicron", "Add lineage here"))
 
-# Complete sublineages that are not listed Nextstrain
-#complete.taxo<-data.frame(WHO=c("Omicron", "TESTOmicronTEST", "Add lineage here"),
-#                          Pango=c("BA.3", "TESTBA.4.6TEST", "Add lineage here"))
-
-# When simplify alias_key.json ignore the sublineages below
-ignore.name.lineages<-data.frame(Pango.1=c("XBB", "Add lineage here"),
-                                 Pango.2=c("XBB", "Add lineage here"))
-
-
 #################################################################################
 
-
-
-library(tidyverse)
-library(strex)
-library(data.table)
-library(stringi)
-library(jsonlite)
-'%!in%' <- function(x,y)!('%in%'(x,y)) 
-'%!like%' <- function(x,y)!('%like%'(x,y)) 
 
 
 
@@ -44,169 +27,166 @@ library(jsonlite)
 #### Import data
 #################################################################################
 freyja<-read.table("freyja_lineage.tsv", fill = TRUE, sep = "\t", h=T)
-lineage <- read_json("alias_key.json", simplifyVector = TRUE)
-taxo<-read.table("database_lineages_table.tsv", h=T, sep = "\t")
-taxo.1<-read.table("NextstrainWHO.txt", header = TRUE, sep = "\t")
+alias.key <- read.table("alias_key.tsv", header = TRUE, sep = "\t")
+list.clade.display <- read.table("ListVariantToDisplay.tsv", header = TRUE, sep = "\t")
+list.recombinant <- read.table("alias_key_recombinant.tsv", header = TRUE, sep = "\t")
+outbreakinfo.lineages<-read.table("outbreakinfo_db_table_melted.tsv", header = TRUE, sep = "\t")
 
 
 
-#################################################################################
-#### Extract special lineages/recombinant info from cov_lineages.json
-#################################################################################
-# Convert json to df
-lineage <- cbind(names(lineage), as.data.frame(matrix(c(lineage, rep(NA, length(lineage) %% length(lineage))), length(lineage))))
-lineage[,1]<-dplyr::na_if(lineage[,1], "")
-names(lineage)<-c("original", "final")
-lineage$n<-str_count(as.character(lineage$final), ",")+1
-lineage$temp<-gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", lineage$final, perl=T)
-lineage<-as.data.frame(lapply(lineage, gsub, pattern='"', replacement=""))
-lineage<-as.data.frame(lapply(lineage, gsub, pattern="[*]", replacement=""))
-lineage<-as.data.frame(lapply(lineage, gsub, pattern=" ", replacement=""))
-lineage$final<-ifelse(lineage$temp == "", lineage$final, lineage$temp)
-# Remove A and B from lineages
-lineage<-lineage[which(lineage$original %!in% c("A", "B")),]
-
-lineage<-lineage[, 1:3]
-lineage.backup<-lineage
-
-
-# Identify VoC within lineages and rename them
-lineage.sub.voc<-unique(gsub("\\..*","",taxo.1$Pango))
-lineage.sub.voc<-lineage.backup %>% filter(original %in% lineage.sub.voc)
-lineage$Pango<-lineage$final
-
-
-lineage$final<-ifelse(lineage$original %in% ignore.name.lineages$Pango.1, lineage$original, lineage$final)
-lineage$Pango<-ifelse(lineage$original %in% ignore.name.lineages$Pango.1, lineage$original, lineage$Pango)
 
 
 #################################################################################
-#### Taxo
+#### Prepare files: Nextstrain clades (list.clade.display)
 #################################################################################
 
-# List all WHO lineages not in "list.variants.with.sublineages" 
-taxo<-taxo %>% filter(WHO %!in% list.variants.with.sublineages) %>%
-  select("WHO", "Pango.sublineages") %>% 
-  drop_na() 
+list.clade.display$Pango.full<-list.clade.display$Pango # Will be useful for the loop
+alias.key.norecombinant<-alias.key %>% dplyr::filter(n == 1) # Remove recombinant (n>2) from alias.key
 
-taxo<-as.data.frame(cbind(taxo[,1], str_split_fixed(taxo$Pango.sublineages, ',', max(str_count(as.character(taxo$Pango.sublineages), ",")+1))))
-taxo<-reshape2::melt(taxo, id=c("V1"))
-taxo<-taxo[, c(1, 3)]; names(taxo)<-c("WHO", "Pango")
-taxo$Pango<-str_trim(taxo$Pango) # Remove spaces before Pango
-
-# Develop lineages in "list.variants.with.sublineages" 
-taxo.1<-taxo.1 %>% filter(WHO %in% list.variants.with.sublineages) %>%
-  filter(WHO %in% list.variants.with.sublineages) %>%
-  select("WHO", "Pango")
-# Add missing lineages
-taxo.1<-rbind(taxo.1, replace.lineages) #taxo.1<-rbind(taxo.1, complete.taxo)
-# Create the lineages displayed on the dashboard
-taxo.1$Lineage<-ifelse(taxo.1$Pango %!in% replace.lineages$Pango, paste0(taxo.1$WHO, " (", taxo.1$Pango, ")"), taxo.1$WHO)
-
-# Add full Pango name (except for recombinants)
-taxo.1$Pango.full<-taxo.1$Pango
-for(i in 1:nrow(lineage)){
-  taxo.1$Pango.full<-gsub(paste0("^", lineage$original[i], "[.]"), paste0(lineage$Pango[i], "."), taxo.1$Pango.full, ignore.case = FALSE)
+# Add full Pango name (eg, B.1.1.1.1.16.1), except for recombinants
+for(i in 1:nrow(alias.key.norecombinant)){
+  list.clade.display$Pango.full<-gsub(paste0("^", alias.key.norecombinant$original[i], "[.]"), paste0(alias.key.norecombinant$final[i], "."), list.clade.display$Pango.full, ignore.case = FALSE)
 }
-taxo.1$Pango.full<-ifelse(taxo.1$Pango %in% replace.lineages$Pango, taxo.1$Pango, taxo.1$Pango.full)
-taxo.1$Pango.full<-ifelse(startsWith(taxo.1$Pango,"X"), taxo.1$Pango, taxo.1$Pango.full)
+
+# Some clades don't have a full Pango name (e.g., Omicron that is B.1.1.529). Fix it using the table replace.lineages
+for(i in 1:nrow(replace.lineages)){
+  list.clade.display<-list.clade.display %>%
+    dplyr::mutate(Pango.full = ifelse(Legend %in% replace.lineages$WHO[i], replace.lineages$Pango[i], Pango.full))
+}
+
+# Add info if clade is a recombinant or not
+list.recombinant1 <- list.recombinant %>% 
+  dplyr::rename(Pango_simplified = original) %>%
+  dplyr::select(Pango_simplified, n)
+
+# List the clades for which there is Pango info in list.clade.display
+list.clade.display.Pango<-list.clade.display %>%
+  dplyr::filter(Pango.full != "")
+
+#################################################################################
+#### Prepare files: (outbreakinfo.lineages)
+#################################################################################
+
+# In outbreakinfo.lineages, discard the clades that are listed in list.clade.display.Pango
+outbreakinfo.lineages.filter <- outbreakinfo.lineages %>%
+  dplyr::mutate(WHO = ifelse(is.na(WHO), "Other", WHO)) %>%
+  dplyr::filter(WHO %!in% list.clade.display.Pango$WHO)
+
 
 
 
 
 #################################################################################
-#### Curate Freyja's output
+#### Freyja predictions (freyja)
 #################################################################################
-freyja.backup<-freyja
-freyja.backup->freyja
-freyja$OriginalLineages<-freyja$Lineage
 
-# Convert long sub-lineages Pango into short Pango
-## Convert all pango into LONG Pango names
-freyja$Pango<-freyja$OriginalLineages
-for(i in which(lineage$original %!in% ignore.name.lineages$Pango.1)){
-  freyja$Pango<-gsub(paste0("^", lineage$original[i], "[.]"), paste0( lineage$Pango[i], "."), freyja$Pango, ignore.case = FALSE)
+
+freyja<-read.table("freyja_lineage.tsv", fill = TRUE, sep = "\t", h=T)
+freyja$OriginalLineages<-freyja$Lineage #Store Lineage into OriginalLineages
+
+#################################################################################
+##### Assign WHO/clade names
+
+## Convert all Pango into LONG Pango names (Pango.full)
+freyja$Pango.full<-freyja$Lineage #initiate variable for loop
+for(i in 1:nrow(alias.key.norecombinant)){
+  freyja$Pango.full<-gsub(paste0("^", alias.key.norecombinant$original[i], "[.]"), paste0(alias.key.norecombinant$final[i], "."), freyja$Pango.full, ignore.case = FALSE)
 }
 #freyja[which(freyja$Lineage =="DK.1"),]
+#freyja[which(freyja$OriginalLineages =="KP.3.1.10"),] #Should be 1.1.529.2.86.1.1.11.1.3.1.10 (Pango.full)
 
-# Assigned lineages that are not listed in "list.variants.with.sublineages" 
-freyja$Lineage<-"Other"
-freyja.Lineage<-freyja$Lineage
+## Work into variables
+
+#freyja.backup<-freyja
+#freyja<-freyja.backup
+freyja$Lineage<-"Other" #Was called "Lineage" in the 1st version of the script, so will keep using "Lineage" instead of "Clade"
+freyja.lineage<-freyja$Lineage
 freyja.OriginalLineages<-freyja$OriginalLineages
-freyja.Pango<-freyja$Pango
+freyja.Pango.full<-freyja$Pango.full
+freyja.Pango.full2<-paste0(freyja$Pango.full,".") # Add dots to make sure KP.3.1.10 is not recognized as KP.3.1.1 :-)
 
-for(i in 1:nrow(taxo)){
-  other.row<-which(freyja.Lineage == "Other")
-  #lineage.row<-which(startsWith(freyja.OriginalLineages, taxo$Pango[i]))
-  lineage.row<-which(freyja.OriginalLineages == taxo$Pango[i])
+list.clade.display.Pango<-dplyr::arrange(list.clade.display.Pango, desc(Pango.full)) # Sort lineages (to ensure they are all well detected in the db) - Otherwise, can misassign a clade
+list.clade.display.Pango.full1<-list.clade.display.Pango$Pango.full
+list.clade.display.Pango.full2<-paste0(list.clade.display.Pango$Pango.full,".") # Add dots to make sure KP.3.1.10 is not recognized as KP.3.1.1 :-)
+
+
+
+## Assign the WHO/clades for the group of variants described in list.clade.display.Pango (on 2024-11-15, it is only Omicron's variants)
+for(i in 1:nrow(list.clade.display.Pango)){
+  other.row<-which(freyja.lineage == "Other")
+  lineage.row<-c(which(startsWith(freyja.Pango.full2, list.clade.display.Pango.full2[i])), # Assign if start Pango.full match with the clade name
+                 which(freyja.Pango.full %in% list.clade.display.Pango.full1[i])) # Assign if perfect match
   lineage.row<-lineage.row[which(lineage.row %in% other.row)]
-  freyja.Lineage[lineage.row]<-taxo$WHO[i]
+  freyja.lineage[lineage.row]<-list.clade.display.Pango$Legend[i]
 }
+freyja$Lineage<-freyja.lineage
 
 
-# Sort lineages (to ensure they are all well detected in the db)
-taxo.1<-arrange(taxo.1, desc(Lineage))
-# Add XBBs at the end
-XBB.rows<-which(taxo.1$Pango %like% "XBB")
-nonXBB.rows<-which(taxo.1$Pango %!like% "XBB")
-taxo.1<-rbind(taxo.1[nonXBB.rows,], taxo.1[XBB.rows, ])
 
-# Assigned lineages that are listed in "list.variants.with.sublineages" 
-## 1
-for(i in 1:nrow(taxo.1)){
-  other.row<-which(freyja.Lineage == "Other")
-  lineage.row<-which(startsWith(freyja.Pango, taxo.1$Pango.full[i]))
+
+## Assign the WHO/clades for the group of variants described in outbreakinfo.lineages (on 2024-11-15, it is everything but Omicron's variants)
+list.clade.display<-dplyr::arrange(list.clade.display, desc(Pango.full)) # Sort lineages (to ensure they are all well detected in the db) - Otherwise, can misassign a clade
+for(i in 1:nrow(outbreakinfo.lineages.filter)){
+  other.row<-which(freyja.lineage == "Other")
+  lineage.row<-which(freyja.OriginalLineages == outbreakinfo.lineages.filter$Pango[i])
   lineage.row<-lineage.row[which(lineage.row %in% other.row)]
-  freyja.Lineage[lineage.row]<-taxo.1$Lineage[i]
+  freyja.lineage[lineage.row]<-outbreakinfo.lineages.filter$WHO[i]
 }
-freyja$Lineage<-freyja.Lineage
-
-## 2
-
-for(i in 1:nrow(taxo.1)){
-  other.row<-which(freyja.Lineage == "Other")
-  lineage.row<-which(startsWith(freyja.Pango, taxo.1$Pango[i]))
-  lineage.row<-lineage.row[which(lineage.row %in% other.row)]
-  freyja.Lineage[lineage.row]<-taxo.1$Lineage[i]
-}
-
-#freyja.Pango<-freyja$Pango
-# for(i in 1:nrow(taxo.1)){
-#   freyja.Lineage[which(paste0("^", freyja.Pango) %like% paste0("^", taxo.1$Pango[i]) & freyja.Lineage == "Other")]<-taxo.1$Lineage[i]
-# }
-freyja$Lineage<-freyja.Lineage
+freyja$Lineage<-freyja.lineage
 
 
 
-  
+
 #################################################################################
 # Filter proportions <X%
-freyja<-freyja %>% filter(as.numeric(as.character(proportion))>=min.proportion)
+freyja<-freyja %>% dplyr::filter(as.numeric(as.character(proportion))>=min.proportion)
+
+
+
+#################################################################################
+## Final changes: Rename header + add new column
+
+# Rename Pango.full to Pango
+freyja<-freyja %>% dplyr::rename(Pango = Pango.full) 
+
+# Add Legend position
+Legend.position.df<-list.clade.display %>% 
+  dplyr::filter(Nextstrain %!in% c("21I", "21J")) %>% #Delta appears 3x time, just keep the 1st one (21A) to avoid errors below
+  dplyr::mutate(legend.position = ifelse(Nextstrain == "21M", 22, legend.position)) %>% # 21M-Omicron appears after 21K-Omicron-BA.1 and 21L-Omicron-BA.2, which can be confusing for people. So, AJR artificially put Omicron before BA.1 and BA.2
+  dplyr::rename(Lineage = Legend) %>% 
+  dplyr::select(legend.position, Lineage) %>% 
+  dplyr::add_row(legend.position = 1, Lineage = "Other") %>%
+  unique() 
+
+
+freyja<-dplyr::left_join(freyja, Legend.position.df, by="Lineage") %>%
+  dplyr::mutate(legend.position = ifelse(Lineage == "Other", 1, legend.position))
 
 
 
 #################################################################################               
 ## Adjust proportion to reach 100% per sample
 sublineages<-freyja %>%
-  group_by(samples, Lineage) %>%
-  summarize(proportion = round(sum(as.numeric(as.character(proportion)), na.rm=TRUE), 2), 
+  dplyr::group_by(samples, Lineage, legend.position) %>%
+  dplyr::summarize(proportion = round(sum(as.numeric(as.character(proportion)), na.rm=TRUE), 2), 
             .groups = 'drop')
 
 adj<-sublineages %>%
-  group_by(samples) %>%
-  summarize(SUM = sum(as.numeric(as.character(proportion)), na.rm=TRUE), 
+  dplyr::group_by(samples) %>%
+  dplyr::summarize(SUM = sum(as.numeric(as.character(proportion)), na.rm=TRUE), 
             .groups = 'drop')
 
 
-sublineages<-left_join(sublineages, adj, by="samples")
+sublineages<-dplyr::left_join(sublineages, adj, by="samples")
 sublineages$proportion<-((1/sublineages$SUM)*sublineages$proportion)
-sublineages<-sublineages %>% mutate_if(is.numeric, ~replace_na(., 0))
+sublineages<-sublineages %>% dplyr::mutate_if(is.numeric, ~replace_na(., 0))
+
 
 
 
 #################################################################################               
 ### Export data
-write.table(sublineages[,c("samples", "Lineage", "proportion")], "./freyja_plot.tsv", quote = FALSE, col.names = TRUE, row.names = FALSE, sep = "\t")
+write.table(sublineages[,c("samples", "Lineage", "proportion", "legend.position")], "./freyja_plot.tsv", quote = FALSE, col.names = TRUE, row.names = FALSE, sep = "\t")
 write.table(freyja, "./freyja_lineages_conversion_backup.tsv", quote = FALSE, col.names = TRUE, row.names = FALSE, sep = "\t")
 
 
