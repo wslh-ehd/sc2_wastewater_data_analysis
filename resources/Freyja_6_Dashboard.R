@@ -71,8 +71,8 @@ samplesinfo$WEEKID<-ifelse((samplesinfo$week %% 2) == 0,
 samplesinfo$weekID<-ifelse((samplesinfo$week %% 2) == 0, samplesinfo$week-1, samplesinfo$week)
 
 # Merge Freyja and SampleInfo
-freyja <- left_join(freyja, samplesinfo, by=c("samples"))
-freyja<-freyja %>% drop_na(Run)
+freyja <- dplyr::left_join(freyja, samplesinfo, by=c("samples")) %>%
+  tidyr::drop_na(Run) # Remove rows containing no Run info
 
 
 
@@ -87,7 +87,7 @@ data.SARS.level.UWM<-data.SARS.level.UWM |>
   dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
   
 data.SARS.level.MDH<-data.SARS.level.MDH |>
-  dplyr::mutate(Date = as.Date(sample_collect_date, format="%Y-%m-%d")) |>
+  dplyr::mutate(Date = as.Date(sample_collect_date, format="%m/%d/%Y")) |>
   dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
 
 data.SARS.level.WSLH<-data.SARS.level.WSLH |>
@@ -141,8 +141,8 @@ data.SARS.level.summarized<-rbind(data.SARS.level.summarized.state, data.SARS.le
 
 ### WEEK ###
 freyja.all.week <-as.data.frame(freyja %>% 
-  select(proportion, Lineage, WEEK, week, year) %>%
-  group_by(week, WEEK, Lineage) %>%
+  select(proportion, Lineage, WEEK, week, year, legend.position) %>%
+  group_by(week, WEEK, Lineage, legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             n = n(),
             .groups = 'drop'))
@@ -162,8 +162,8 @@ freyja.all.week$n<-freyja.all.week$Total/100
 
 ### BI-WEEKLY ###
 freyja.all.biweekly <-as.data.frame(freyja %>% 
-  select(proportion, Lineage, year, weekID, WEEKID) %>%
-  group_by(WEEKID, weekID, Lineage) %>%
+  select(proportion, Lineage, year, weekID, WEEKID, legend.position) %>%
+  group_by(WEEKID, weekID, Lineage, legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             n = n(),
             .groups = 'drop'))
@@ -197,8 +197,8 @@ freyja.cities<-freyja
 freyja.cities$weekcity<-paste0(freyja.cities$week, freyja.cities$sites, freyja.cities$year)
 
 freyja.city.week <-as.data.frame(freyja.cities %>% 
-  select(proportion, Lineage, week, weekcity, sites, year) %>%
-  group_by(weekcity, Lineage) %>%
+  select(proportion, Lineage, week, weekcity, sites, year, legend.position) %>%
+  group_by(weekcity, Lineage,legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
 
@@ -219,8 +219,8 @@ freyja.city.week$n<-freyja.city.week$Total/100
 freyja.cities$weekIDcity<-paste0(freyja.cities$weekID, freyja.cities$sites, freyja.cities$year)
 
 freyja.city.biweekly <-as.data.frame(freyja.cities %>% 
-  select(proportion, Lineage, weekID, weekIDcity, sites, year) %>%
-  group_by(weekIDcity, Lineage) %>%
+  select(proportion, Lineage, weekID, weekIDcity, sites, year, legend.position) %>%
+  group_by(weekIDcity, Lineage, legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
 
@@ -248,118 +248,101 @@ freyja.city.biweekly$hoover<-paste0("weeks ", freyja.city.biweekly$weekID, "-", 
 ################################################################################
 ######## VISUAL PREPARATION
 ################################################################################
-#colors<-c('#002f45','#dcbeff','#6bade3',"#872b8b",'#9A6324','#64b34d','#fb9a99','#ffc500','#1e90ff',"#e31a1c",'#f58231','#98fb98',"#6a3d9a",'#800000','#ccebc5','#75fff1','#ffff54','#cab2d6','#fdbf6f','#ff1493')
-colors<-c(	
-  '#002f45',
-  '#dcbeff',
-  '#6bade3',
-  '#872b8b',
-  '#9A6324',
-  '#64b34d',
-  '#fb9a99',
-  '#ffc500',
-  '#1e90ff',
-  '#e31a1c',
-  '#f58231',
-  '#98fb98',
-  '#fdd897',
-  '#ff9900', 
-  '#ff44b4',
-  '#6a3d9a',
-  '#800000',
-  '#ccebc5',
-  '#75fff1',
-  '#ffff54',
-  '#cab2d6',
-  '#e35e4e',
-  '#3d9a70'
-)
+colors<-c("#ffb7ad","#BDF271","#e53935","#0eeaff","#33691E","#26A69A","#d95100","#1BBC9B","#b9121b","#ffd933","#04668C","#ff1d23","#553285","#04BFBF","#900B0A","#45BF55","#BEEB9F","#020873","#9768d1","#ff822e","#ACF0F2","#ffd10f","#ff2d00","#0092B2","#EF5350","#35478C","#ffbe00","#D50000","#6b14a6","#0288D1","#43A047","#0EEAFF","#36175e","#add5f7","#1976d2","#ffd34e","#f77a52","#ab47bc","#96CA2D","#3498db","#f2b705","#553285","#168039","#f4511e","#ff9b78","#00305a","#ffd933","#7abaf2","#5c0002","#f0c755","#0d47a1")
 colors.grey<-"#9db8c7"
 
 
-
+lvl.lineage.color <- freyja %>%           
+  dplyr::select(legend.position, Lineage) %>%
+  unique() %>%
+  dplyr::arrange(legend.position) %>% # sort dataframe according to legend.position order
+  dplyr::mutate(Lineage = factor(Lineage, unique(Lineage)),  # reset your factor-column based on that order
+                color = c(colors.grey, colors[1:length(Lineage)-1]))
   
 
 ################################################################################
 ######## VISUAL: BARPLOT
 ################################################################################
-freyja.barplot<-rbind(freyja.all.biweekly[, c("weekID", "year", "Lineage", "proportion", "Date", "City", "hoover")], 
-                      freyja.city.biweekly[, c("weekID", "year", "Lineage", "proportion", "Date",  "City", "hoover")])
+# Extract relevant data
+freyja.barplot<-rbind(freyja.all.biweekly[, c("weekID", "year", "Lineage", "proportion", "Date", "City", "hoover", "legend.position")], 
+                      freyja.city.biweekly[, c("weekID", "year", "Lineage", "proportion", "Date",  "City", "hoover", "legend.position")])
 
-old.lvl<-levels(as.factor(freyja.barplot$Lineage))
-freyja.barplot$Lineage<-factor(freyja.barplot$Lineage, levels=c("Other", sort(old.lvl[old.lvl!="Other"], decreasing=T)))
-freyja.barplot<-dplyr::left_join(freyja.barplot, data.SARS.level.summarized, by=c("weekID", "year", "City"))
+# Add SARS data
+freyja.barplot<-dplyr::left_join(freyja.barplot, data.SARS.level.summarized, by=c("weekID", "year", "City")) %>%
+  dplyr::arrange(legend.position) %>%               # sort dataframe according to legend.position order
+  dplyr::mutate(Lineage = factor(Lineage, unique(Lineage))) # reset your factor-column based on that order
 
-colors.plot<-c(colors.grey, rev(colors[1:length(old.lvl)-1]))
-#scales::show_col(colors.plot)
-colors.plot.barplot<-colors.plot
+# Define colors
+colors.plot.barplot<-lvl.lineage.color %>%
+  dplyr::filter(Lineage %in% freyja.barplot$Lineage) %>%
+  dplyr::pull(color) # Only keep column 'color' and convert to vector
+
 
 
 ################################################################################
 ######## VISUAL: HEATMAP
 ################################################################################
+# Extract relevant data
 freyja.heatmap<-freyja.city.week
-freyja.heatmap$alpha<-freyja.heatmap$proportion/100
 
 # Determine the predominant variant in a sample
 freyja.heatmap$predominance<-freyja.heatmap$Lineage
 temp<-freyja.heatmap %>%
-  group_by(sites, week) %>%
-  filter(proportion == max(proportion, na.rm=TRUE))
-temp$predominance<-"Predominant variants"
-temp$alpha<-1
-temp$tooltip<-paste0(temp$Lineage, "<br>",
-                     temp$sites, "<br>",
-                     "week ", temp$week, " (", temp$Date, ")")
+  dplyr::group_by(sites, week) %>%
+  dplyr::filter(proportion == max(proportion, na.rm=TRUE)) %>%
+  dplyr::mutate(predominance = "Predominant variants",
+                 
+                tooltip =paste0(Lineage, "<br>",
+                     sites, "<br>",
+                     "week ", week, " (", Date, ")")) %>%
+  as.data.frame()
 
 
 # Add 0% when lineage not observed in a sample 
-level.lineages<-levels(as.factor(freyja.heatmap$Lineage))
-temp.1<-as.data.frame(temp)
-temp.1$Lineage = temp.1$predominance = temp.1$tooltip <-"NA"; temp.1$proportion = temp.1$Sum = temp.1$alpha <-0;
-for (i in 1:length(level.lineages)){
-  temp.2<-freyja.heatmap %>% filter(Lineage == level.lineages[i])
-  temp.3<-temp.1[which(temp.1$weekcity %!in% temp.2$weekcity), c("weekcity", "sites", "year", "week", "alpha", "Total", "Lineage", "Sum", "proportion", "Date", "n", "predominance")]
-  temp.3$Lineage = temp.3$predominance <-level.lineages[i]
+level.lineages.heatmap<-levels(as.factor(freyja.heatmap$Lineage))
+temp.1<-temp %>%
+  dplyr::mutate(Lineage = NA, 
+                predominance = NA, 
+                tooltip = NA, 
+                proportion = 0, 
+                Sum = 0)
+for (i in 1:length(level.lineages.heatmap)){
+  temp.2<-freyja.heatmap %>% dplyr::filter(Lineage == level.lineages.heatmap[i])
+  temp.3<-temp.1[which(temp.1$weekcity %!in% temp.2$weekcity), c("weekcity", "sites", "year", "week", "Total", "Lineage", "Sum", "proportion", "Date", "n", "predominance", "legend.position")]
+  temp.3$Lineage = temp.3$predominance <-level.lineages.heatmap[i]
   freyja.heatmap<-rbind(freyja.heatmap, temp.3)
 }
-freyja.heatmap$tooltip<-paste0(freyja.heatmap$Lineage, "<br>",
-                     "Relative abundance: ", round(freyja.heatmap$proportion, 1), "%", "<br>",
-                     freyja.heatmap$sites, "<br>",
-                     "week ", freyja.heatmap$week, " (", freyja.heatmap$Date, ")")
 
-# Merge  predominant data with all lineages (including 0%) data
-freyja.heatmap<-rbind(freyja.heatmap, temp)
+# # Merge predominant data with all lineages (including 0%) data: merge freyja.heatmap and temp 
+freyja.heatmap <- freyja.heatmap %>%
+  dplyr::mutate(tooltip = paste0(Lineage, "<br>",
+                                 "Relative abundance: ", round(proportion, 1), "%", "<br>",
+                                 sites, "<br>",
+                                 "week ", week, " (", Date, ")")) %>%
+  dplyr::add_row(temp)
 
-freyja.heatmap <- freyja.heatmap %>% filter(Lineage != "Other")
-freyja.heatmap$`Relative abundance (%)`<-freyja.heatmap$proportion
-freyja.heatmap$sites<-factor(freyja.heatmap$sites, levels = c(sort(unique(freyja.heatmap$site), decreasing=T)))
-freyja.heatmap.alphabetical<-freyja.heatmap
 
-# Define colors
-old.lvl<-levels(as.factor(freyja.heatmap$Lineage))
-freyja.heatmap$Lineage<-factor(freyja.heatmap$Lineage, levels=c(sort(old.lvl, decreasing=F)))
-colors.plot<-(c(colors[1:length(old.lvl)]))
-colors.plot.heatmap<-colors.plot
-colors.heatmap<-as.data.frame(cbind(colors.plot.heatmap, old.lvl))
-names(colors.heatmap)<-c("colors", "Lineage")
-colors.heatmap <- colors.heatmap %>% filter(Lineage %in% unique(temp$Lineage))
-#colors.plot.heatmap<-colors.heatmap$colors
-for (i in 1:nrow(colors.heatmap)){
-  variant=colors.heatmap[i, 2]
-  hex=colors.heatmap[i, 1]
-  pre<-assign(variant, hex)
-  if(i == 1){colors.plot.heatmap <-pre} else {colors.plot.heatmap<-c(pre, colors.plot.heatmap)}
-}
 
 # Add population served
-freyja.heatmap <- left_join(freyja.heatmap, wwtp.info, by=c("sites"))
+freyja.heatmap <- dplyr::left_join(freyja.heatmap, wwtp.info, by=c("sites"))
 
-#Setting up for dashboard
-freyja.heatmap<- freyja.heatmap %>%
-  select(sites, PopulationServed, Lineage, `Relative abundance (%)`, tooltip, predominance, Date)
-freyja.heatmap$sites<-as.character(freyja.heatmap$sites)
-colors.plot.heatmap<-rev(colors.plot.heatmap)
+
+# Last edits to freyja.heatmap for dashboard
+freyja.heatmap <- freyja.heatmap %>% 
+  dplyr::filter(Lineage != "Other") %>%  #Remove from the rolling menu the "Other" Lineage
+  dplyr::mutate(`Relative abundance (%)` = proportion) %>% # Rename 'proportion'
+  dplyr::arrange(legend.position) %>%               # sort dataframe according to legend.position order
+  dplyr::mutate(Lineage = factor(Lineage, unique(Lineage))) %>% # reset your factor-column based on that order
+  dplyr::select(sites, PopulationServed, Lineage, `Relative abundance (%)`, tooltip, predominance, Date) # Select variables of interest
+
+
+# Define colors
+colors.plot.heatmap<-lvl.lineage.color %>%
+  dplyr::arrange(desc(legend.position)) %>%
+  dplyr::filter(Lineage %in% as.factor(temp$Lineage),
+                Lineage != "Other") %>% # Remove thecolor associated to Other
+  dplyr::pull(color) # Only keep column 'color' and convert to vector
+
 
 
 
@@ -369,32 +352,46 @@ colors.plot.heatmap<-rev(colors.plot.heatmap)
 ################################################################################
 zipcode<- wwtp.info %>% select(sites, zipcode) %>% filter(zipcode != "NA")
 
-freyja.map<-freyja 
-freyja.map <- freyja.map %>% filter(Lineage != "Other")
 
+# # Define colors - THIS DOESN"T WORK!!
+# colors.plot.map<-lvl.lineage.color %>%
+#   dplyr::filter(Lineage %in% as.factor(names(freyja.map)),
+#                 Lineage != "Other") %>% # Remove thecolor associated to Other
+#   dplyr::arrange(-desc(Lineage)) %>% ## DOES NOT WORK!!!!!
+#   dplyr::mutate(Lineage = factor(Lineage, unique(Lineage))) %>%
+#   dplyr::pull(color)
+
+# Define colors - somehow, arrange() was not working (above), so I had to find a way around to make it work :-|
+colors.plot.map <- data.frame(Lineage = levels(as.factor(freyja$Lineage))) %>% # List Lineages in alphabetical order!!
+  dplyr::filter(Lineage != "Other") # Remove the color associated to Other
+colors.plot.map <- dplyr::left_join(colors.plot.map, lvl.lineage.color, by="Lineage") %>% # Add HEX to lineage
+  dplyr::pull(color) # extract colors
+
+
+
+# Extract relevant data
+freyja.map<-freyja %>% 
+  dplyr::filter(Lineage != "Other")
+
+# Convert zipcode into long and lat
 geo<-as.data.frame(geocode_zip(zipcode$zipcode))
 zipcode$zipcode<-as.character(zipcode$zipcode)
-zipcode<-full_join(geo, zipcode, by="zipcode")
+zipcode<-dplyr::full_join(geo, zipcode, by="zipcode")
 names(zipcode)<-c("zipcode", "lat", "long", "sites")
-
 freyja.map<-left_join(freyja.map, zipcode, by="sites")
-old.lvl<-levels(as.factor(freyja.map$Lineage))
-freyja.map$Lineage<-factor(freyja.map$Lineage, levels=c(sort(old.lvl, decreasing=F)))
-colors.plot<-(c(colors[1:length(old.lvl)]))
-colors.plot.map<-colors.plot
 
 ## Extract first occurence of each variant
 freyja.1st.occurence <- freyja.map %>%
-  filter(proportion > 0) %>%
-  select(Lineage, Date) %>%
-  group_by(Lineage) %>%
-  top_n(n=1, wt=desc(Date))
-freyja.1st.occurence<-as.data.frame(freyja.1st.occurence)
+  dplyr::filter(proportion > 0) %>%
+  dplyr::select(Lineage, Date) %>%
+  dplyr::group_by(Lineage) %>%
+  dplyr::top_n(n=1, wt=desc(Date)) %>%
+  as.data.frame()
 
 ### Dashboard
 freyja.map$Week <- paste0(freyja.map$Month, " week ", freyja.map$week)
 freyja.map<-freyja.map %>%
-  select(sites, Date, Lineage, proportion, lat, long, Month, Week)
+  dplyr::select(sites, Date, Lineage, proportion, lat, long, Month, Week, legend.position)
 
 ## Add "missing" samples = Attribute a value for each collection date (even if everything = 0)
 freyja.map.empty<-freyja.map
@@ -410,16 +407,18 @@ for (i in 1:length(level.sites)){
 }
 
 freyja.map <- freyja.map %>%
-  group_by(sites, Lineage, lat, long, Month) %>%
-  summarise(abundance=round(sum(proportion*100), 2),
+  dplyr::group_by(sites, Lineage, lat, long, Month) %>%
+  dplyr::summarise(abundance=round(sum(proportion*100), 2),
             n = n(),
-            .groups = 'drop') 
-freyja.map$proportion<-round(freyja.map$abundance/freyja.map$n, digits=2)
+            .groups = 'drop') %>%
+  dplyr::mutate(proportion = round(abundance/n, digits=2))
 
 # Format df for dashbaord
-freyja.map<-reshape2::dcast(freyja.map, sites+lat+long+Month~Lineage, sum, value.var = "proportion")
-freyja.map<-freyja.map[ , -which(names(freyja.map) %in% c("NA"))]
-freyja.map$Month<-as.Date(paste0("01 ", freyja.map$Month), format="%d %b %Y")
+freyja.map<-freyja.map %>%
+  dplyr::select(Lineage, sites, lat, long, Month, proportion) %>%
+  tidyr::spread(key=Lineage, value=proportion, fill=0) %>%
+  dplyr::select(-"NA") %>%              
+  dplyr::mutate(Month = as.Date(paste0("01 ", Month), format="%d %b %Y")) 
 
 
 
