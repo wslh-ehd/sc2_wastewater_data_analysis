@@ -133,7 +133,7 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
             depth=${variant/-variant.tsv/-depth}
             out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
             echo $out
-            docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
+            docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_FilteredRecombinants.csv
         done
     done < ./Results/2022-01-01_FreyjaFiles_DoNotTouch/Less1Year_SeqRuns.txt
 
@@ -168,7 +168,7 @@ if [[ $workflow == "database_freyja_run" ]] ; then
         depth=${variant/-variant.tsv/-depth}
         out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
         echo $out
-        docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
+        docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_FilteredRecombinants.csv
         #freyja demix $variant $depth --output ./Results/$output/freyja/demix/$out-results.txt
     done
 fi
