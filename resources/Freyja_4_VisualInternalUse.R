@@ -18,38 +18,40 @@ library(tidyverse)
 freyja <-read.table("freyja_plot.tsv", header = TRUE, sep = "\t")
 freyja.raw <-read.table("freyja_lineages_conversion_backup.tsv", header = TRUE, sep = "\t")
 samplesinfo<-read.xlsx("ListSamples.xlsx", sheet="Samples", startRow = 3)
-runsinfo<-read.xlsx("ListSamples.xlsx", sheet="Runs", startRow = 10)
+runsinfo<-openxlsx::read.xlsx("ListSamples.xlsx", sheet="Runs", startRow = 10)
 
 # Merge three datasets
 runsinfo<-runsinfo[, c("Run", "QC_Run")]
-samplesinfo <- left_join(samplesinfo, runsinfo, by=c("Run"))
-samplesinfo$samples<-paste0(samplesinfo$Run, "@", samplesinfo$FilesNames)
+samplesinfo <- dplyr::left_join(samplesinfo, runsinfo, by=c("Run")) %>%
+  dplyr::mutate(samples = paste0(Run, "@", FilesNames))
 
 # Set (new) variables
-samplesinfo <- samplesinfo %>% rename(sites = Location)
-samplesinfo$Date<-as.Date(as.numeric(as.character(samplesinfo$Date)), origin = "1899-12-30")
+samplesinfo <- samplesinfo %>% 
+  dplyr::rename(sites = Location) %>%
+  dplyr::mutate(Date = as.Date(as.numeric(as.character(Date)), origin = "1899-12-30"))
 samplesinfo$Date[samplesinfo$Sample.type=="Control"] <- Sys.Date()  # Add "today's date" to all Controls
 
 
 # Select "Samples" 
-samplesinfo<-samplesinfo %>% filter(samples != "NA")
-samplesinfo$Month<-format(as.Date(samplesinfo$Date), "%b %Y")
-samplesinfo$month<-format(as.Date(samplesinfo$Date), "%m %Y")
-samplesinfo$week<-as.numeric(as.character(strftime(samplesinfo$Date, format = "%V")))
-samplesinfo$year<-format(as.Date(samplesinfo$Date), "%Y")
-samplesinfo$weekID<-ifelse((samplesinfo$week %% 2) == 0, samplesinfo$week-1, samplesinfo$week)
+samplesinfo<-samplesinfo %>% 
+  dplyr::filter(samples != "NA") %>%
+  dplyr::mutate(Month = format(as.Date(Date), "%b %Y"),
+                month = format(as.Date(Date), "%m %Y"),
+                week = as.numeric(as.character(lubridate::strftime(Date, format = "%V"))),
+                year = format(as.Date(Date), "%Y"),
+                weekID = ifelse((week %% 2) == 0, week-1, week))
 
 # Prepare plots
 
 # Summarized lineages
-freyja <- left_join(freyja, samplesinfo, by=c("samples"))
-freyja<-freyja %>% drop_na(Run)
-freyja$Display<-paste0(as.Date(freyja$Date), "_", freyja$samples)
+freyja <- dplyr::left_join(freyja, samplesinfo, by=c("samples")) %>%
+  tidyr::drop_na(Run) %>%
+  dplyr::mutate(Display = paste0(as.Date(Date), "_", samples))
 last.run<-levels(as.factor(freyja$Run))[length(levels(as.factor(freyja$Run)))]
 # Raw output
-freyja.raw <- left_join(freyja.raw, samplesinfo, by=c("samples"))
-freyja.raw<-freyja.raw %>% drop_na(Run)
-freyja.raw$Display<-paste0(as.Date(freyja.raw$Date), "_", freyja.raw$samples)
+freyja.raw <- dplyr::left_join(freyja.raw, samplesinfo, by=c("samples")) %>% 
+  tidyr::drop_na(Run) %>%
+  dplyr::mutate(Display = paste0(as.Date(Date), "_", samples))
 
 
 
