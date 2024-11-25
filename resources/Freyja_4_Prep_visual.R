@@ -26,11 +26,11 @@ replace.lineages<-data.frame(Pango=c("B.1.1.529", "Add lineage here"),
 #################################################################################
 #### Import data
 #################################################################################
-freyja<-read.table("freyja_lineage.tsv", fill = TRUE, sep = "\t", h=T)
-alias.key <- read.table("alias_key.tsv", header = TRUE, sep = "\t")
-list.clade.display <- read.table("ListVariantToDisplay.tsv", header = TRUE, sep = "\t")
-list.recombinant <- read.table("alias_key_recombinant.tsv", header = TRUE, sep = "\t")
-outbreakinfo.lineages<-read.table("outbreakinfo_db_table_melted.tsv", header = TRUE, sep = "\t")
+freyja<-read.table("./freyja_lineage.tsv", fill = TRUE, sep = "\t", h=T)
+alias.key <- read.table("./alias_key.tsv", header = TRUE, sep = "\t")
+list.clade.display <- read.table("./ListVariantToDisplay.tsv", header = TRUE, sep = "\t")
+list.recombinant <- read.table("./alias_key_recombinant.tsv", header = TRUE, sep = "\t")
+outbreakinfo.lineages<-read.table("./outbreakinfo_db_table_melted.tsv", header = TRUE, sep = "\t")
 
 
 
