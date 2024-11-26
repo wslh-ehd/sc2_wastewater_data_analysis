@@ -2,7 +2,8 @@ rm(list=ls(all=FALSE))
 ls()
 set.seed(123)
 library(outbreakinfo) #devtools::install_github("outbreak-info/R-outbreak-info")
-library(dplyr)
+require(dplyr)
+require(stringr)
 require(reshape2)
 
 ##########################################################################################################
@@ -28,7 +29,7 @@ names(all.variant1)<-c("WHO", "Pango sublineages", "Status")
 all.variant2<-all.variant1 %>%
   dplyr::select(-Status)
 
-all.variant2<-as.data.frame(cbind(all.variant2[,1], str_split_fixed(all.variant2$`Pango sublineages`, ',', max(str_count(as.character(all.variant2$`Pango sublineages`), ",")+1)))) # Split all Pango lineage is distinct columns
+all.variant2<-as.data.frame(cbind(all.variant2[,1], stringr::str_split_fixed(all.variant2$`Pango sublineages`, ',', max(stringr::str_count(as.character(all.variant2$`Pango sublineages`), ",")+1)))) # Split all Pango lineage is distinct columns
 
 all.variant2<-reshape2::melt(all.variant2, id=c("V1")) %>%
   dplyr::mutate(WHO = V1,
