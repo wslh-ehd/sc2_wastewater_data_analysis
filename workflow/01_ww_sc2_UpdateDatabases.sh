@@ -147,7 +147,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	    freyja update --outdir . # update lineage database https://github.com/andersen-lab/Freyja
 
 	## Remove recombinants, except the ones listed into Nextstrain
-	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_filterUsherBarcodes.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1_filterUsherBarcodes.log
 
 
 fi
