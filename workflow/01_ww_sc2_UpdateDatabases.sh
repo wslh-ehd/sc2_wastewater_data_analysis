@@ -135,6 +135,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	curl -k -o Freyja_4_Prep_visual.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_4_Prep_visual.R
 	curl -k -o Freyja_5_VisualInternalUse.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_5_VisualInternalUse.R
 	curl -k -o Freyja_6_Dashboard.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_6_Dashboard.R
+ 	curl -k -o manual_lineages_table.tsv https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/manual_lineages_table.tsv
 	curl -k -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/public/data/nameTable.json
 	curl -k -o clade_display_names.yml -XGET -L https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/clade_display_names.yml
 	wget https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json
