@@ -37,7 +37,7 @@ samplesinfo<-samplesinfo %>%
   dplyr::filter(samples != "NA") %>%
   dplyr::mutate(Month = format(as.Date(Date), "%b %Y"),
                 month = format(as.Date(Date), "%m %Y"),
-                week = as.numeric(as.character(lubridate::strftime(Date, format = "%V"))),
+                week = as.numeric(as.character(strftime(Date, format = "%V"))),
                 year = format(as.Date(Date), "%Y"),
                 weekID = ifelse((week %% 2) == 0, week-1, week))
 
