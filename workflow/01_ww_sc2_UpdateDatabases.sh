@@ -80,7 +80,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 
 	## Import resources
 	curl -k -o Database_0_ImportDatabase.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_0_ImportDatabase.R
-	curl -k -o Database_1_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Usher_to_NextstrainWHO.R
+	curl -k -o Database_1_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_1_Usher_to_NextstrainWHO.R
 	curl -k -o Database_2_CovariantMutations.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_2_CovariantMutations.R
 	curl -k -o Database_3_Visual_prep.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_3_Visual_prep.R
 	curl -k -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/public/data/nameTable.json
@@ -129,12 +129,15 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 
 	# Import resources
 	curl -k -o Freyja_0_GetLineagesOutbreak.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_0_GetLineagesOutbreak.R
-	curl -k -o Freyja_1_Aggregate.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_1_Aggregate.R
-	curl -k -o Freyja_2_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Usher_to_NextstrainWHO.R
-	curl -k -o Freyja_3_Prep_visual.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_3_Prep_visual.R
-	curl -k -o Freyja_4_VisualInternalUse.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_4_VisualInternalUse.R
-	curl -k -o Freyja_5_Dashboard.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_5_Dashboard.R
+ 	curl -k -o Freyja_1_FilterRecombinantInUsherBarcodes.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_1_FilterRecombinantInUsherBarcodes.R
+	curl -k -o Freyja_2_Aggregate.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_2_Aggregate.R
+	curl -k -o Freyja_3_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_3_Usher_to_NextstrainWHO.R
+	curl -k -o Freyja_4_Prep_visual.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_4_Prep_visual.R
+	curl -k -o Freyja_5_VisualInternalUse.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_5_VisualInternalUse.R
+	curl -k -o Freyja_6_Dashboard.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Freyja_6_Dashboard.R
+ 	curl -k -o manual_lineages_table.tsv https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/manual_lineages_table.tsv
 	curl -k -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/public/data/nameTable.json
+	curl -k -o clade_display_names.yml -XGET -L https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/clade_display_names.yml
 	wget https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json
 
 	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
@@ -143,8 +146,9 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	# Update freyja reference database
 	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
 	    freyja update --outdir . # update lineage database https://github.com/andersen-lab/Freyja
-	# Remove recombinants, except XBB
-	awk '{ gsub("XBB","_X_B_B",$1); print $1 }' usher_barcodes.csv | grep -v "^X" | grep -v "^HW" | grep -v "^GT" | grep -v "^GL" | awk '{ gsub("_X_B_B","XBB",$1); print $1 }' > usher_barcodes_withRecombinantXBBonly.csv
+
+	## Remove recombinants, except the ones listed into Nextstrain
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1_filterUsherBarcodes.log
 
 
 fi

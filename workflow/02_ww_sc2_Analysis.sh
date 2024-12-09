@@ -133,7 +133,7 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]]; then
             depth=${variant/-variant.tsv/-depth}
             out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
             echo $out
-            docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
+            docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_FilteredRecombinants.csv
         done
     done < ./Results/2022-01-01_FreyjaFiles_DoNotTouch/Less1Year_SeqRuns.txt
 
@@ -168,7 +168,7 @@ if [[ $workflow == "database_freyja_run" ]] ; then
         depth=${variant/-variant.tsv/-depth}
         out=${variant/-variant.tsv/}; out=${out/\/freyja\//@};
         echo $out
-        docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_withRecombinantXBBonly.csv
+        docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest freyja boot $variant $depth --nt 15 --nb 10 --output_base ./Results/$output/freyja/bootstraps/$out --barcodes ./Results/$output/freyja/usher_barcodes_FilteredRecombinants.csv
         #freyja demix $variant $depth --output ./Results/$output/freyja/demix/$out-results.txt
     done
 fi
@@ -185,11 +185,11 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "f
 
     cp ../archive/ListSamples.xlsx .
 
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_6_*.R | tee ../archive/R_freyja_6.log
 
 fi
 
