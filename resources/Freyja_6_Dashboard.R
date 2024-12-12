@@ -32,8 +32,11 @@ samplesinfo<-read.xlsx("ListSamples.xlsx", sheet="Samples", startRow = 3)
 runsinfo<-read.xlsx("ListSamples.xlsx", sheet="Runs", startRow = 10)
 wwtp.info<-read.table(url("https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/wwtp_info.txt"), h=T, sep = "\t")
 
+
 # Import SARS-CoV-2 loads related data
 load("./SARSCoV2concentrationData.RData")
+wwtp.info.levels<-read.table("wwtp_info.tsv", h=T, sep = "\t")
+
 
 ################################################################################
 ######## Preparation 
@@ -99,7 +102,8 @@ data.SARS.level.WSLH<-data.SARS.level.WSLH |>
 
 # Merge MKE + WSLH SARS-levels datasets
 data.SARS.level <- rbind(data.SARS.level.UWM, data.SARS.level.MDH, data.SARS.level.WSLH) |>
-  dplyr::filter(pcr_gene_target %in% c("n1", "n2")) %>%
+  dplyr::filter(pcr_gene_target %in% c("n1", "n2"), 
+                Date > "2022-01-01") %>%
   dplyr::mutate(week = as.numeric(as.character(strftime(Date, format = "%V"))),
                 weekID = ifelse((week %% 2) == 0, week-1, week),
                 year = format(as.Date(Date), "%Y"))
@@ -116,6 +120,7 @@ data.SARS.level <- left_join(data.SARS.level, wwtp.info.levels, by=c("wwtp_name"
 
 # Aggregate the data bi-weekly
 data.SARS.level.summarized <- data.SARS.level %>%
+  dplyr::mutate_at(c('flow_rate', 'pcr_target_avg_conc', 'PopulationServed'), as.numeric)  %>%
   dplyr::group_by(as.factor(sample_id), City, weekID, year) %>%
   dplyr::summarise(sars = ((geometric_mean(pcr_target_avg_conc+1, na.rm = TRUE)-1) * mean(flow_rate) * 3.7854*1e6 )/ mean(PopulationServed),
                    .groups = 'drop')
@@ -248,7 +253,8 @@ freyja.city.biweekly$hoover<-paste0("weeks ", freyja.city.biweekly$weekID, "-", 
 ################################################################################
 ######## VISUAL PREPARATION
 ################################################################################
-colors<-c("#ffb7ad","#BDF271","#e53935","#0eeaff","#33691E","#26A69A","#d95100","#1BBC9B","#b9121b","#ffd933","#04668C","#ff1d23","#553285","#04BFBF","#900B0A","#45BF55","#BEEB9F","#020873","#9768d1","#ff822e","#ACF0F2","#ffd10f","#ff2d00","#0092B2","#EF5350","#35478C","#ffbe00","#D50000","#6b14a6","#0288D1","#43A047","#0EEAFF","#36175e","#add5f7","#1976d2","#ffd34e","#f77a52","#ab47bc","#96CA2D","#3498db","#f2b705","#553285","#168039","#f4511e","#ff9b78","#00305a","#ffd933","#7abaf2","#5c0002","#f0c755","#0d47a1")
+
+colors<-c("#ffb7ad","#BDF271","#e53935","#0eeaff","#33691E","#26A69A","#f79100","#a2decc","#b9121b","#ffd933","#04668C","#04BFBF","#553285","#ff1d23","#900B0A","#45BF55","#BEEB9F","#020873","#9768d1","#ff822e","#ACF0F2","#ffd10f","#ff2d00","#0092B2","#EF5350","#35478C","#ffbe00","#D50000","#6b14a6","#0288D1","#43A047","#0EEAFF","#36175e","#add5f7","#1976d2","#ffd34e","#f77a52","#ab47bc","#96CA2D","#3498db","#f2b705","#553285","#168039","#f4511e","#ff9b78","#00305a","#ffd933","#7abaf2","#5c0002","#f0c755","#0d47a1")
 colors.grey<-"#9db8c7"
 
 
