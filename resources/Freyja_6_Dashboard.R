@@ -7,6 +7,7 @@ set.seed(123)
 library(openxlsx)
 library(data.table)
 library(lubridate)
+library(ISOweek)
 library(tidyverse)
 library(hrbrthemes) #sudo apt -y install libfontconfig1-dev; sudo apt-get install libcairo2-dev
 library(sf)
@@ -19,6 +20,49 @@ library(zipcodeR)
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
+# Display the date as YYYY_WW 
+'Year_Week.ajr' <- function (x = Sys.Date()) {
+  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
+  dn <- 1 + (wday(x) + 5)%%7
+  nth <- xday + ddays(4 - dn)
+  jan1 <- ISOdate(year(nth), 1, 1, tz = tz(x))
+  return(paste0(format(nth, "%Y"), "_", sprintf("%02d", 1 + (nth - jan1)%/%ddays(7))))
+}
+
+# Display the date as YYYY_WW 
+'Year.ajr' <- function (x = Sys.Date()) {
+  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
+  dn <- 1 + (wday(x) + 5)%%7
+  nth <- xday + ddays(4 - dn)
+  return(format(nth, "%Y"))
+}
+
+# Bi-weekly bin the date and display the output as YYYY_WW 
+'BIYear_BIWeek.ajr' <- function (x = Sys.Date()) {
+  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
+  dn <- 1 + (wday(x) + 5)%%7
+  pre.nth <- xday + ddays(4 - dn)
+  jan1 <- ISOdate(year(pre.nth), 1, 1, tz = tz(x))
+  week <- 1 + (pre.nth - jan1)%/%ddays(7)
+  pre.everyotherweek <- ifelse(week %% 2 == 0, week-1, week)
+  # For year transition:
+  everyotherweek <- ifelse(pre.everyotherweek < 1, 52, pre.everyotherweek) 
+  nth <- ifelse(pre.everyotherweek < 1, format(pre.nth, "%Y") - 1, format(pre.nth, "%Y")) 
+  return(paste0(nth, "_", sprintf("%02d", everyotherweek)))
+}
+
+# Bi-weekly bin the date and ONLY display the year: YYYY 
+'BIYear.ajr' <- function (x = Sys.Date()) {
+  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
+  dn <- 1 + (wday(x) + 5)%%7
+  pre.nth <- xday + ddays(4 - dn)
+  jan1 <- ISOdate(year(pre.nth), 1, 1, tz = tz(x))
+  week <- 1 + (pre.nth - jan1)%/%ddays(7)
+  pre.everyotherweek <- ifelse(week %% 2 == 0, week-1, week)
+  # For year transition:
+  nth <- ifelse(pre.everyotherweek < 1, format(pre.nth, "%Y") - 1, format(pre.nth, "%Y")) 
+  return(nth)
+}
 
 
 
@@ -44,34 +88,41 @@ wwtp.info.levels<-read.table("wwtp_info.tsv", h=T, sep = "\t")
 
 # Merge run and sample metadata0
 runsinfo<-runsinfo[, c("Run", "QC_Run")]
-samplesinfo <- left_join(samplesinfo, runsinfo, by=c("Run"))
-samplesinfo$samples<-paste0(samplesinfo$Run, "@", samplesinfo$FilesNames)
+samplesinfo <- dplyr::left_join(samplesinfo, runsinfo, by=c("Run"))
 
 
-# Set (new) variables
-samplesinfo <- samplesinfo %>% rename(sites = Location)
-samplesinfo$Date<-as.Date(as.numeric(as.character(samplesinfo$Date)), origin = "1899-12-30")
-samplesinfo$Date<-as.Date(samplesinfo$Date, "%m%d%y")
-samplesinfo$Samples<-paste0(samplesinfo$sites, "_", samplesinfo$date)
+# Set new variables
+samplesinfo <- samplesinfo %>% 
+  dplyr::rename(sites = Location) %>%
+  dplyr::mutate(samples = paste0(Run, "@", FilesNames), 
+                Samples = paste0(sites, "_", Date),
+                
+                Date = as.Date(as.numeric(as.character(Date)), origin = "1899-12-30"),
+                Date = as.Date(Date, "%m%d%y"),
+                week = as.numeric(as.character(strftime(Date, format = "%V"))),
+                #week = ISOweek::ISOweek(Date),
+                
+                # Split dates by month - MAP
+                Month = format(as.Date(Date), "%b %Y"),
+                Month_num = format(as.Date(Date), "%m %Y"),
+                
+                # Split dates by week - HEATMAP
+                Week = ISOweek::ISOweek(Date),
+                temp.Date_Week = ifelse(!is.na(Week),(paste0(Week, "-1")), NA), # Somehow this line is important otherwise it crashes the line below
+                Date_Week = ISOweek::ISOweek2date(temp.Date_Week),
+                
+                # Split dates bi-weekly - BARPLOT
+                biWeek = ifelse((week %% 2) == 0, ISOweek::ISOweek(Date-7), ISOweek::ISOweek(Date)), # Bi-weekly week, i.e., week 1 = 1, week 2 = 1, week 3 = 3, etc.  
+                temp.Date_biWeek = ifelse(!is.na(biWeek),(paste0(biWeek, "-1")), NA), # Somehow this line is important otherwise it crashes the line below
+                Date_biWeek = ISOweek::ISOweek2date(temp.Date_biWeek)) %>%
+  
+  dplyr::select(-temp.Date_Week, -temp.Date_biWeek) # Remove temporary columns
 
 
-# Select "Samples" 
-samplesinfo<-samplesinfo %>% filter(samples != "NA", Sample.type == "Sample", QC_Run == "qc_passed", QC_Sample == "qc_passed")
-samplesinfo<-samplesinfo %>% filter(sites %!like% "MadisonP")
 
-samplesinfo$Month<-format(as.Date(samplesinfo$Date), "%b %Y")
-samplesinfo$month<-format(as.Date(samplesinfo$Date), "%m %Y")
-samplesinfo$week<-as.numeric(as.character(strftime(samplesinfo$Date, format = "%V")))
-samplesinfo$year<-format(as.Date(samplesinfo$Date), "%Y")
-samplesinfo$WEEK<-paste0(samplesinfo$year, "_", strftime(samplesinfo$Date, format = "%V"))
-samplesinfo$WEEKID<-ifelse((samplesinfo$week %% 2) == 0, 
-                           ifelse(nchar(samplesinfo$week-1)==1, 
-                                  paste0(samplesinfo$year, "_0", samplesinfo$week-1),
-                                  paste0(samplesinfo$year, "_", samplesinfo$week-1)),
-                           ifelse(nchar(samplesinfo$week)==1, 
-                                  paste0(samplesinfo$year, "_0", samplesinfo$week),
-                                  paste0(samplesinfo$year, "_", samplesinfo$week)))
-samplesinfo$weekID<-ifelse((samplesinfo$week %% 2) == 0, samplesinfo$week-1, samplesinfo$week)
+# Filter "Samples" 
+samplesinfo<-samplesinfo %>% dplyr::filter(samples != "NA", Sample.type == "Sample", QC_Run == "qc_passed", QC_Sample == "qc_passed")
+samplesinfo<-samplesinfo %>% dplyr::filter(sites %!like% "MadisonP")
 
 # Merge Freyja and SampleInfo
 freyja <- dplyr::left_join(freyja, samplesinfo, by=c("samples")) %>%
@@ -87,26 +138,25 @@ freyja <- dplyr::left_join(freyja, samplesinfo, by=c("samples")) %>%
 # Preparation
 data.SARS.level.UWM<-data.SARS.level.UWM |>
   dplyr::mutate(Date = as.Date(sample_collect_date, format="%Y-%m-%d")) |>
-  dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
+  dplyr::select(wwtp_name, sample_id, Date, pcr_target, pcr_target_avg_conc, flow_rate)
   
 data.SARS.level.MDH<-data.SARS.level.MDH |>
   dplyr::mutate(Date = as.Date(sample_collect_date, format="%m/%d/%Y")) |>
-  dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
+  dplyr::select(wwtp_name, sample_id, Date, pcr_target, pcr_target_avg_conc, flow_rate)
 
 data.SARS.level.WSLH<-data.SARS.level.WSLH |>
   dplyr::mutate(Date = as.Date(sample_collect_date_stop, format="%Y-%m-%d")) |>
   dplyr::filter(!grepl("not representative", tolower(wwtp_comments)), 
                 pcr_target_avg_conc >= 0,
                 sample_location == "wwtp") |>
-  dplyr::select(wwtp_name, sample_id, Date, pcr_gene_target, pcr_target_avg_conc, flow_rate)
+  dplyr::select(wwtp_name, sample_id, Date, pcr_target, pcr_target_avg_conc, flow_rate)
 
 # Merge MKE + WSLH SARS-levels datasets
 data.SARS.level <- rbind(data.SARS.level.UWM, data.SARS.level.MDH, data.SARS.level.WSLH) |>
-  dplyr::filter(pcr_gene_target %in% c("n1", "n2"), 
+  dplyr::filter(pcr_target %in% c("sars-cov-2"), 
                 Date > "2022-01-01") %>%
   dplyr::mutate(week = as.numeric(as.character(strftime(Date, format = "%V"))),
-                weekID = ifelse((week %% 2) == 0, week-1, week),
-                year = format(as.Date(Date), "%Y"))
+                biWeek = ifelse((week %% 2) == 0, ISOweek::ISOweek(Date-7), ISOweek::ISOweek(Date))) # Bi-weekly week, i.e., week 1 = 1, week 2 = 1, week 3 = 3, etc.  
 
 # Add population size
 wwtp.info.levels <- wwtp.info.levels |>
@@ -118,21 +168,21 @@ wwtp.info.levels <- wwtp.info.levels |>
 data.SARS.level <- left_join(data.SARS.level, wwtp.info.levels, by=c("wwtp_name"))
 
 
-# Aggregate the data bi-weekly
+# Aggregate the data bi-weekly for BARPLOT visual
 data.SARS.level.summarized <- data.SARS.level %>%
   dplyr::mutate_at(c('flow_rate', 'pcr_target_avg_conc', 'PopulationServed'), as.numeric)  %>%
-  dplyr::group_by(as.factor(sample_id), City, weekID, year) %>%
+  dplyr::group_by(as.factor(sample_id), City, biWeek) %>%
   dplyr::summarise(sars = ((geometric_mean(pcr_target_avg_conc+1, na.rm = TRUE)-1) * mean(flow_rate) * 3.7854*1e6 )/ mean(PopulationServed),
                    .groups = 'drop')
 data.SARS.level.summarized.state <- data.SARS.level.summarized %>%
-  dplyr::group_by(weekID, year) %>%
+  dplyr::group_by(biWeek) %>%
   dplyr::summarise(sars.per.week = geometric_mean(sars+1, na.rm = TRUE)-1,
                    .groups = 'drop') %>%
   dplyr::mutate(City = "All cities combined")
 
 data.SARS.level.summarized.state[is.nan(data.SARS.level.summarized.state)] <- 0
 data.SARS.level.summarized.cities <- data.SARS.level.summarized %>%
-  dplyr::group_by(weekID, year, City) %>%
+  dplyr::group_by(biWeek, City) %>%
   dplyr::summarise(sars.per.week = geometric_mean(sars+1, na.rm = TRUE)-1,
                    .groups = 'drop')
 data.SARS.level.summarized.cities[is.nan(data.SARS.level.summarized.cities)] <- 0
@@ -141,113 +191,115 @@ data.SARS.level.summarized<-rbind(data.SARS.level.summarized.state, data.SARS.le
 
 
 ################################################################################
-######## STATEWIDE: Aggregate data per week/bi-weekly
+######## STATEWIDE: Aggregate data weekly and bi-weekly
 ################################################################################
 
-### WEEK ###
+### WEEK - HEATMAP ###
 freyja.all.week <-as.data.frame(freyja %>% 
-  select(proportion, Lineage, WEEK, week, year, legend.position) %>%
-  group_by(week, WEEK, Lineage, legend.position) %>%
+  select(proportion, Lineage, Week, Date_Week, legend.position) %>%
+  group_by(Week, Date_Week, Lineage, legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             n = n(),
             .groups = 'drop'))
 
 freyja.all.week <- as.data.frame(setDT(
   as.data.frame(freyja %>% 
-  select(proportion, year, week, WEEK) %>%
-  group_by(week, WEEK, year) %>%
+  select(proportion, Week, Date_Week) %>%
+  group_by(Week, Date_Week) %>%
   summarise(Total = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
-  )[freyja.all.week, on="WEEK"])
+  )[freyja.all.week, on="Date_Week"])
 
-freyja.all.week$proportion<-round(freyja.all.week$Sum/freyja.all.week$Total*100,2)
-freyja.all.week$Date<-parse_date_time(paste(freyja.all.week$year, freyja.all.week$week, 1, sep="/"),'Y/W/w')
-freyja.all.week$n<-freyja.all.week$Total/100
+freyja.all.week<-freyja.all.week %>%
+  dplyr::mutate(proportion = round(Sum/Total*100,2),
+                n<-Total/100)  %>%
+  dplyr::rename(Date = Date_Week)
 
 
-### BI-WEEKLY ###
+### BI-WEEKLY - BARPLOT ###
 freyja.all.biweekly <-as.data.frame(freyja %>% 
-  select(proportion, Lineage, year, weekID, WEEKID, legend.position) %>%
-  group_by(WEEKID, weekID, Lineage, legend.position) %>%
+  select(proportion, Lineage, biWeek, Date_biWeek, legend.position) %>%
+  group_by(biWeek, Date_biWeek, Lineage, legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             n = n(),
             .groups = 'drop'))
 
 freyja.all.biweekly <- as.data.frame(setDT(
   as.data.frame(freyja %>% 
-  select(proportion, year, weekID, WEEKID) %>%
-  group_by(WEEKID, weekID, year) %>%
+  select(proportion, biWeek, Date_biWeek) %>%
+  group_by(biWeek, Date_biWeek) %>%
   summarise(Total = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
-  )[freyja.all.biweekly, on="WEEKID"])
+  )[freyja.all.biweekly, on="Date_biWeek"])
 
-freyja.all.biweekly$proportion<-round(freyja.all.biweekly$Sum/freyja.all.biweekly$Total*100,2)
-freyja.all.biweekly$Date<-parse_date_time(paste(freyja.all.biweekly$year, freyja.all.biweekly$weekID, 1, sep="/"),'Y/W/w')
-
-freyja.all.biweekly$City<-"All cities combined"
-freyja.all.biweekly$hoover<-paste0("weeks ", freyja.all.biweekly$weekID, "-", freyja.all.biweekly$weekID+1, " (starting ", format(freyja.all.biweekly$Date, format="%b %d, %y"), ")<br>",
-                                   freyja.all.biweekly$Lineage, "<br>",
-                                   round(freyja.all.biweekly$proportion, 1), "% <br>Average of ",
-                                   round(freyja.all.biweekly$Total, 0), " sample(s)")
+freyja.all.biweekly<-freyja.all.biweekly %>%
+  dplyr::mutate(proportion=round(Sum/Total*100,2),
+                City = "All cities combined",
+                week.num = as.numeric(str_sub(biWeek, start= -2)),
+                hoover = paste0("weeks ", week.num, "-", week.num+1, " (starting ", format(Date_biWeek, format="%b %d, %y"), ")<br>",
+                                   Lineage, "<br>",
+                                   round(proportion, 1), "% <br>Average of ",
+                                   round(Total, 0), " sample(s)")) %>%
+  dplyr::rename(Date = Date_biWeek)
 
 
 
 
 ################################################################################
-######## SEWERSHED LEVEL: Aggregate data per week/bi-weekly
+######## SEWERSHED LEVEL: Aggregate data weekly and bi-weekly
 ################################################################################
 freyja.cities<-freyja
 
 ### WEEK ###
-freyja.cities$weekcity<-paste0(freyja.cities$week, freyja.cities$sites, freyja.cities$year)
+freyja.cities$weekcity<-paste0(freyja.cities$Week, freyja.cities$sites)
 
 freyja.city.week <-as.data.frame(freyja.cities %>% 
-  select(proportion, Lineage, week, weekcity, sites, year, legend.position) %>%
+  select(proportion, Lineage, Week, Date_Week, weekcity, sites, legend.position) %>%
   group_by(weekcity, Lineage,legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
 
 freyja.city.week <- as.data.frame(setDT(
   as.data.frame(freyja.cities %>% 
-  select(proportion, year, sites, weekcity, week, sites) %>%
-  group_by(weekcity, sites, year, week) %>%
+  select(proportion, Week, Date_Week, sites, weekcity, sites) %>%
+  group_by(weekcity, sites, Week, Date_Week) %>%
   summarise(Total = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
   )[freyja.city.week, on="weekcity"])
 
-freyja.city.week$proportion<-round(freyja.city.week$Sum/freyja.city.week$Total*100,2)
-freyja.city.week$Date<-parse_date_time(paste(freyja.city.week$year, freyja.city.week$week, 1, sep="/"),'Y/W/w')
-freyja.city.week$n<-freyja.city.week$Total/100
+freyja.city.week<-freyja.city.week %>%
+  dplyr::mutate(proportion = round(Sum/Total*100,2),
+                n = Total/100)  %>%
+  dplyr::rename(Date = Date_Week)
 
 
 ### BI-WEEKLY ###
-freyja.cities$weekIDcity<-paste0(freyja.cities$weekID, freyja.cities$sites, freyja.cities$year)
+freyja.cities$weekIDcity<-paste0(freyja.cities$biWeek, freyja.cities$sites)
 
 freyja.city.biweekly <-as.data.frame(freyja.cities %>% 
-  select(proportion, Lineage, weekID, weekIDcity, sites, year, legend.position) %>%
+  select(proportion, Lineage, biWeek, Date_biWeek, weekIDcity, sites, legend.position) %>%
   group_by(weekIDcity, Lineage, legend.position) %>%
   summarise(Sum = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
 
 freyja.city.biweekly <- as.data.frame(setDT(
   as.data.frame(freyja.cities %>% 
-  select(proportion, year, sites, weekIDcity, weekID, sites) %>%
-  group_by(weekIDcity, sites, year, weekID) %>%
+  select(proportion, biWeek, Date_biWeek, sites, weekIDcity, sites) %>%
+  group_by(weekIDcity, sites, biWeek, Date_biWeek) %>%
   summarise(Total = sum(proportion, na.rm = TRUE),
             .groups = 'drop'))
   )[freyja.city.biweekly, on="weekIDcity"])
 
-freyja.city.biweekly$proportion<-round(freyja.city.biweekly$Sum/freyja.city.biweekly$Total*100,2)
-freyja.city.biweekly$Date<-parse_date_time(paste(freyja.city.biweekly$year, freyja.city.biweekly$weekID, 1, sep="/"),'Y/W/w')
-freyja.city.biweekly$n<-freyja.city.biweekly$Total/100
-
-freyja.city.biweekly$City<-freyja.city.biweekly$sites
-freyja.city.biweekly$hoover<-paste0("weeks ", freyja.city.biweekly$weekID, "-", freyja.city.biweekly$weekID+1, " (starting ", format(freyja.city.biweekly$Date, format="%b %d, %y"), ")<br>",
-                                    freyja.city.biweekly$Lineage, "<br>",
-                                    round(freyja.city.biweekly$proportion, 1), "% <br>Average of ",
-                                    round(freyja.city.biweekly$Total, 0), " sample(s)")
-
-
+freyja.city.biweekly<-freyja.city.biweekly %>%
+  dplyr::mutate(proportion=round(Sum/Total*100,2),
+                n = Total/100,
+                City = sites,
+                week.num = as.numeric(str_sub(biWeek, start= -2)),
+                hoover = paste0("weeks ", week.num, "-", week.num+1, " (starting ", format(Date_biWeek, format="%b %d, %y"), ")<br>",
+                                Lineage, "<br>",
+                                round(proportion, 1), "% <br>Average of ",
+                                round(Total, 0), " sample(s)")) %>%
+  dplyr::rename(Date = Date_biWeek)
 
 
 ################################################################################
@@ -299,11 +351,11 @@ lvl.lineage.color <- freyja %>%
 ######## VISUAL: BARPLOT
 ################################################################################
 # Extract relevant data
-freyja.barplot<-rbind(freyja.all.biweekly[, c("weekID", "year", "Lineage", "proportion", "Date", "City", "hoover", "legend.position")], 
-                      freyja.city.biweekly[, c("weekID", "year", "Lineage", "proportion", "Date",  "City", "hoover", "legend.position")])
+freyja.barplot<-rbind(freyja.all.biweekly[, c("biWeek", "Lineage", "proportion", "Date", "City", "hoover", "legend.position")], 
+                      freyja.city.biweekly[, c("biWeek", "Lineage", "proportion", "Date",  "City", "hoover", "legend.position")])
 
 # Add SARS data
-freyja.barplot<-dplyr::left_join(freyja.barplot, data.SARS.level.summarized, by=c("weekID", "year", "City")) %>%
+freyja.barplot<-dplyr::left_join(freyja.barplot, data.SARS.level.summarized, by=c("biWeek", "City")) %>%
   dplyr::arrange(legend.position) %>%               # sort dataframe according to legend.position order
   dplyr::mutate(Lineage = factor(Lineage, unique(Lineage))) # reset your factor-column based on that order
 
@@ -323,13 +375,13 @@ freyja.heatmap<-freyja.city.week
 # Determine the predominant variant in a sample
 freyja.heatmap$predominance<-freyja.heatmap$Lineage
 temp<-freyja.heatmap %>%
-  dplyr::group_by(sites, week) %>%
+  dplyr::group_by(sites, Week) %>%
   dplyr::filter(proportion == max(proportion, na.rm=TRUE)) %>%
   dplyr::mutate(predominance = "Predominant variants",
-                 
-                tooltip =paste0(Lineage, "<br>",
+                week.num = as.numeric(str_sub(Week, start= -2)), 
+                tooltip = paste0(Lineage, "<br>",
                      sites, "<br>",
-                     "week ", week, " (", Date, ")")) %>%
+                     "week ", week.num, " (", Date, ")")) %>%
   as.data.frame()
 
 
@@ -343,17 +395,19 @@ temp.1<-temp %>%
                 Sum = 0)
 for (i in 1:length(level.lineages.heatmap)){
   temp.2<-freyja.heatmap %>% dplyr::filter(Lineage == level.lineages.heatmap[i])
-  temp.3<-temp.1[which(temp.1$weekcity %!in% temp.2$weekcity), c("weekcity", "sites", "year", "week", "Total", "Lineage", "Sum", "proportion", "Date", "n", "predominance", "legend.position")]
+  temp.3<-temp.1[which(temp.1$weekcity %!in% temp.2$weekcity), c("weekcity", "sites", "Week", "Total", "Lineage", "Sum", "proportion", "Date", "n", "predominance", "legend.position")]
   temp.3$Lineage = temp.3$predominance <-level.lineages.heatmap[i]
   freyja.heatmap<-rbind(freyja.heatmap, temp.3)
 }
 
 # # Merge predominant data with all lineages (including 0%) data: merge freyja.heatmap and temp 
 freyja.heatmap <- freyja.heatmap %>%
-  dplyr::mutate(tooltip = paste0(Lineage, "<br>",
+  dplyr::mutate(week.num = as.numeric(str_sub(Week, start= -2)),
+                tooltip = paste0(Lineage, "<br>",
                                  "Relative abundance: ", round(proportion, 1), "%", "<br>",
                                  sites, "<br>",
-                                 "week ", week, " (", Date, ")")) %>%
+                                 "week ", week.num, " (", Date, ")"),
+                Date = as.POSIXct(Date, format="%Y-%m-%d")) %>%
   dplyr::add_row(temp)
 
 
@@ -424,7 +478,7 @@ freyja.1st.occurence <- freyja.map %>%
   as.data.frame()
 
 ### Dashboard
-freyja.map$Week <- paste0(freyja.map$Month, " week ", freyja.map$week)
+#freyja.map$Week <- paste0(freyja.map$Month, " week ", freyja.map$week)
 freyja.map<-freyja.map %>%
   dplyr::select(sites, Date, Lineage, proportion, lat, long, Month, Week, legend.position)
 
@@ -448,7 +502,7 @@ freyja.map <- freyja.map %>%
             .groups = 'drop') %>%
   dplyr::mutate(proportion = round(abundance/n, digits=2))
 
-# Format df for dashbaord
+# Format df for dashboard
 freyja.map<-freyja.map %>%
   dplyr::select(Lineage, sites, lat, long, Month, proportion) %>%
   tidyr::spread(key=Lineage, value=proportion, fill=0) %>%
