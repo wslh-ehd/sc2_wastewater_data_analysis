@@ -20,50 +20,6 @@ library(zipcodeR)
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
-# Display the date as YYYY_WW 
-'Year_Week.ajr' <- function (x = Sys.Date()) {
-  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
-  dn <- 1 + (wday(x) + 5)%%7
-  nth <- xday + ddays(4 - dn)
-  jan1 <- ISOdate(year(nth), 1, 1, tz = tz(x))
-  return(paste0(format(nth, "%Y"), "_", sprintf("%02d", 1 + (nth - jan1)%/%ddays(7))))
-}
-
-# Display the date as YYYY_WW 
-'Year.ajr' <- function (x = Sys.Date()) {
-  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
-  dn <- 1 + (wday(x) + 5)%%7
-  nth <- xday + ddays(4 - dn)
-  return(format(nth, "%Y"))
-}
-
-# Bi-weekly bin the date and display the output as YYYY_WW 
-'BIYear_BIWeek.ajr' <- function (x = Sys.Date()) {
-  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
-  dn <- 1 + (wday(x) + 5)%%7
-  pre.nth <- xday + ddays(4 - dn)
-  jan1 <- ISOdate(year(pre.nth), 1, 1, tz = tz(x))
-  week <- 1 + (pre.nth - jan1)%/%ddays(7)
-  pre.everyotherweek <- ifelse(week %% 2 == 0, week-1, week)
-  # For year transition:
-  everyotherweek <- ifelse(pre.everyotherweek < 1, 52, pre.everyotherweek) 
-  nth <- ifelse(pre.everyotherweek < 1, format(pre.nth, "%Y") - 1, format(pre.nth, "%Y")) 
-  return(paste0(nth, "_", sprintf("%02d", everyotherweek)))
-}
-
-# Bi-weekly bin the date and ONLY display the year: YYYY 
-'BIYear.ajr' <- function (x = Sys.Date()) {
-  xday <- ISOdate(year(x), month(x), day(x), tz = tz(x))
-  dn <- 1 + (wday(x) + 5)%%7
-  pre.nth <- xday + ddays(4 - dn)
-  jan1 <- ISOdate(year(pre.nth), 1, 1, tz = tz(x))
-  week <- 1 + (pre.nth - jan1)%/%ddays(7)
-  pre.everyotherweek <- ifelse(week %% 2 == 0, week-1, week)
-  # For year transition:
-  nth <- ifelse(pre.everyotherweek < 1, format(pre.nth, "%Y") - 1, format(pre.nth, "%Y")) 
-  return(nth)
-}
-
 
 
 ################################################################################
@@ -334,8 +290,29 @@ colors<-c("#00425f", #Delta
           "#35478C", #KP.2.3
           "#ffa600", #LF.7
           "#D50000", #MV.1
+          "#96CA2D", #LP.8.1
+          "#ff9b78",
           "#6b14a6",
-          "#0288D1","#ff2d00","#0EEAFF","#36175e","#add5f7","#1976d2","#ffd34e","#f77a52","#ab47bc","#96CA2D","#3498db","#f2b705","#553285","#168039","#f4511e","#ff9b78","#00305a","#ffd933","#7abaf2","#5c0002","#f0c755","#0d47a1")
+          "#0288D1",
+          "#ff2d00",
+          "#0EEAFF",
+          "#36175e",
+          "#add5f7",
+          "#1976d2",
+          "#ffd34e",
+          "#f77a52",
+          "#ab47bc",
+          "#3498db",
+          "#f2b705",
+          "#553285",
+          "#168039",
+          "#f4511e",
+          "#00305a",
+          "#ffd933",
+          "#7abaf2",
+          "#5c0002",
+          "#f0c755",
+          "#0d47a1")
 colors.grey<-"#9db8c7"
 
 
@@ -376,7 +353,8 @@ freyja.heatmap<-freyja.city.week
 freyja.heatmap$predominance<-freyja.heatmap$Lineage
 temp<-freyja.heatmap %>%
   dplyr::group_by(sites, Week) %>%
-  dplyr::filter(proportion == max(proportion, na.rm=TRUE)) %>%
+  dplyr::filter(proportion == max(proportion, na.rm=TRUE), 
+                Date > Sys.Date()-2.1*365) %>% ############### IF THE GRADIENT GLITCH HAPPENS AGAIN, change 2.1 with lower value (e.g., 2, 1.9, 1.8)
   dplyr::mutate(predominance = "Predominant variants",
                 week.num = as.numeric(str_sub(Week, start= -2)), 
                 tooltip = paste0(Lineage, "<br>",
