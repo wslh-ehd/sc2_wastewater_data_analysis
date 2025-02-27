@@ -354,7 +354,7 @@ freyja.heatmap$predominance<-freyja.heatmap$Lineage
 temp<-freyja.heatmap %>%
   dplyr::group_by(sites, Week) %>%
   dplyr::filter(proportion == max(proportion, na.rm=TRUE), 
-                Date > Sys.Date()-2.1*365) %>% ############### IF THE GRADIENT GLITCH HAPPENS AGAIN, change 2.1 with lower value (e.g., 2, 1.9, 1.8)
+                Date > Sys.Date()-2*365) %>% ############### IF THE GRADIENT GLITCH HAPPENS AGAIN, change 2 with lower value (e.g., 1.9, 1.8)
   dplyr::mutate(predominance = "Predominant variants",
                 week.num = as.numeric(str_sub(Week, start= -2)), 
                 tooltip = paste0(Lineage, "<br>",
