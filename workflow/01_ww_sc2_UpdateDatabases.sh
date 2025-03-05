@@ -80,6 +80,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 
 	## Import resources
 	curl -k -o Database_0_ImportDatabase.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_0_ImportDatabase.R
+        curl -k -o Database_00_ImportDatabase.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_00_ImportDatabase.R
 	curl -k -o Database_1_Usher_to_NextstrainWHO.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_1_Usher_to_NextstrainWHO.R
 	curl -k -o Database_2_CovariantMutations.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_2_CovariantMutations.R
 	curl -k -o Database_3_Visual_prep.R https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/Database_3_Visual_prep.R
