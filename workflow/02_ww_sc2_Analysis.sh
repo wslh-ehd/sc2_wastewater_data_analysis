@@ -76,16 +76,19 @@ cp "$0" /scratch/projects/SARS-CoV-2/Results/$output/archive/.
 
 if [[ $workflow == "database" ]] || [[ $workflow == "all" ]] ||  [[ $workflow == "database_freyja_run" ]] ; then
 
-    # Update data
+    # Update data - only process the last 300 files/samples
     cd /scratch/projects/SARS-CoV-2/
 
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/variants/ivar/*_depth.tsv > ./Results/$output/databases/CallDepthCompiled.tsv
-    sed -i 's/\/variants\/ivar\//\t/' ./Results/$output/databases/CallDepthCompiled.tsv
-    sed -i 's/_depth.tsv//' ./Results/$output/databases/CallDepthCompiled.tsv
+    depthfiles=$(ls Seq*/variants/ivar/*_depth.tsv | tail -n 300)
+    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ${depthfiles} > "$output"/CallDepthCompiled.tsv
+    sed -i 's/\/variants\/ivar\//\t/' "$output"/CallDepthCompiled.tsv
+    sed -i 's/_depth.tsv//' "$output"/CallDepthCompiled.tsv
+    
+    variantfiles=$(ls Seq*/variants/ivar/*_notfiltered.tsv | tail -n 300)
+    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ${variantfiles} > "$output"/CallVariantALLCompiled.tsv
+    sed -i 's/\/variants\/ivar\//\t/' "$output"/CallVariantALLCompiled.tsv
+    sed -i 's/_notfiltered.tsv//' "$output"/CallVariantALLCompiled.tsv
 
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' Seq*/variants/ivar/*_notfiltered.tsv > ./Results/$output/databases/CallVariantALLCompiled.tsv
-    sed -i 's/\/variants\/ivar\//\t/' ./Results/$output/databases/CallVariantALLCompiled.tsv
-    sed -i 's/_notfiltered.tsv//' ./Results/$output/databases/CallVariantALLCompiled.tsv
 fi
 
 
@@ -97,7 +100,8 @@ if [[ $workflow == "database" ]] || [[ $workflow == "all" ]] || [[ $workflow == 
     cd /scratch/projects/SARS-CoV-2/Results/$output/databases/
 
     cp ../archive/ListSamples.xlsx .
-
+    
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_00_*.R | tee ../archive/R_database_00.log #Allow to refresh the list of the variants manually selected
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
 
