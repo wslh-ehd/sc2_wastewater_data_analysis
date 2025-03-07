@@ -80,14 +80,14 @@ if [[ $workflow == "database" ]] || [[ $workflow == "all" ]] ||  [[ $workflow ==
     cd /scratch/projects/SARS-CoV-2/
 
     depthfiles=$(ls Seq*/variants/ivar/*_depth.tsv | tail -n 300)
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ${depthfiles} > "$output"/CallDepthCompiled.tsv
-    sed -i 's/\/variants\/ivar\//\t/' "$output"/CallDepthCompiled.tsv
-    sed -i 's/_depth.tsv//' "$output"/CallDepthCompiled.tsv
+    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ${depthfiles} > ./Results/"$output"/databases/CallDepthCompiled.tsv
+    sed -i 's/\/variants\/ivar\//\t/' ./Results/"$output"/databases/CallDepthCompiled.tsv
+    sed -i 's/_depth.tsv//' ./Results/"$output"/databases/CallDepthCompiled.tsv
     
     variantfiles=$(ls Seq*/variants/ivar/*_notfiltered.tsv | tail -n 300)
-    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ${variantfiles} > "$output"/CallVariantALLCompiled.tsv
-    sed -i 's/\/variants\/ivar\//\t/' "$output"/CallVariantALLCompiled.tsv
-    sed -i 's/_notfiltered.tsv//' "$output"/CallVariantALLCompiled.tsv
+    awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ${variantfiles} > ./Results/"$output"/databases/CallVariantALLCompiled.tsv
+    sed -i 's/\/variants\/ivar\//\t/' ./Results/"$output"/databases/CallVariantALLCompiled.tsv
+    sed -i 's/_notfiltered.tsv//' ./Results/"$output"/databases/CallVariantALLCompiled.tsv
 
 fi
 
