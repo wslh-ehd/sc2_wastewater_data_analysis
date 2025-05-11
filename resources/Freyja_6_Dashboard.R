@@ -95,7 +95,8 @@ freyja <- dplyr::left_join(freyja, samplesinfo, by=c("samples")) %>%
 data.SARS.level.UWM<-data.SARS.level.UWM |>
   dplyr::mutate(Date = as.Date(sample_collect_date, format="%Y-%m-%d")) |>
   dplyr::select(wwtp_name, sample_id, Date, pcr_target, pcr_target_avg_conc, flow_rate)
-  
+
+data.SARS.level.MDH<-rbind(data.SARS.level.MDH.1, data.SARS.level.MDH.2)
 data.SARS.level.MDH<-data.SARS.level.MDH |>
   dplyr::mutate(Date = as.Date(sample_collect_date, format="%m/%d/%Y")) |>
   dplyr::select(wwtp_name, sample_id, Date, pcr_target, pcr_target_avg_conc, flow_rate)
