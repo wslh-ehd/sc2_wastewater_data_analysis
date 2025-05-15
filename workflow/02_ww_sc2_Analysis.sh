@@ -101,9 +101,9 @@ if [[ $workflow == "database" ]] || [[ $workflow == "all" ]] || [[ $workflow == 
 
     cp ../archive/ListSamples.xlsx .
     
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_00_*.R | tee ../archive/R_database_00.log #Allow to refresh the list of the variants manually selected
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_2_*.R | tee ../archive/R_database_2.log
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Database_3_*.R | tee ../archive/R_database_3.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Database_00_*.R | tee ../archive/R_database_00.log #Allow to refresh the list of the variants manually selected
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Database_2_*.R | tee ../archive/R_database_2.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Database_3_*.R | tee ../archive/R_database_3.log
 
 fi
 
@@ -189,10 +189,10 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "f
 
     cp ../archive/ListSamples.xlsx .
 
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r/dashboard:lastest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_2_*.R | tee ../archive/R_freyja_2.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data rdashboard3/rdashboard3 Rscript Freyja_6_*.R | tee ../archive/R_freyja_6.log # Added package ISOweek
 
 fi
