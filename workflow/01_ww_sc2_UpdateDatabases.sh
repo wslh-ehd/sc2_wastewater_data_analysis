@@ -87,7 +87,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 	curl -k -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/public/data/nameTable.json
 	cp /scratch/projects/SARS-CoV-2/Workflow/Database_Outbreak_VoC_to_explore.txt .
 
-	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:lastest Rscript Database_0_*.R | tee ../archive/R_database_0.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Database_0_*.R | tee ../archive/R_database_0.log
 
 	git clone https://github.com/hodcroftlab/covariants.git
 	awk 'BEGIN{OFS="\t"} {print FILENAME,$0}' ./covariants*/defining_mutations/*.tsv > covariant_mutations.tsv 
@@ -97,7 +97,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "database" ]; then
 
 
 	## Generate databases
-	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:lastest Rscript Database_1_*.R | tee ../archive/R_database_1.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Database_1_*.R | tee ../archive/R_database_1.log
 
 
 
@@ -143,7 +143,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	cp /mnt/SLHFILE/COVID19\ in\ sewage\ \&\ water/R\ code/SourceScripts/resources/wwtp_info.tsv .  # Files located on M drive 
 
  
-	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:lastest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
 
 
 	# Update freyja reference database
@@ -151,7 +151,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	    freyja update --outdir . # update lineage database https://github.com/andersen-lab/Freyja
 
 	## Remove recombinants, except the ones listed into Nextstrain
-	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:lastest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1_filterUsherBarcodes.log
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_1_*.R | tee ../archive/R_freyja_1_filterUsherBarcodes.log
 
 
 fi
