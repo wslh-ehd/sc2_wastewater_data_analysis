@@ -140,7 +140,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 	curl -k -o nameTable.json -XGET -L https://raw.githubusercontent.com/hodcroftlab/covariants/master/web/public/data/nameTable.json
 	curl -k -o clade_display_names.yml -XGET -L https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/clade_display_names.yml
 	wget https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json
-	cp /mnt/SLHFILE/COVID19\ in\ sewage\ \&\ water/R\ code/SourceScripts/resources/wwtp_info.tsv .  # Files located on M drive 
+	cp /mnt/SLHFILE/ESS\ Wastewater\ Surveillance/Rcode_Analyses/SourceScripts/resources/wwtp_info.tsv .  # Files located on M drive 
 
  
 	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_0_*.R | tee ../archive/R_freyja_0.log
