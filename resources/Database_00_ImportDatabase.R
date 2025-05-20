@@ -27,20 +27,20 @@ extract_mutations_info <-function(x, output) {
   
   # Extract nt mutations info
   #data.nt = read.table(paste0(query.nt, lineage), h=T)
-  data.nt <- read_json(paste0(query.nt, lineage), simplifyVector = TRUE)
+  data.nt <- jsonlite::read_json(paste0(query.nt, lineage), simplifyVector = TRUE)
   if(is.data.frame(data.nt$data)){
     data.nt<-as.data.frame(data.nt$data)
-    data.nt <- rename(data.nt, mutation.nt = mutation)
+    data.nt <- dplyr::rename(data.nt, mutation.nt = mutation)
     data.nt$POS<-as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", data.nt$mutation.nt)))
     data.nt<-as.data.frame(setDT(genome)[data.nt, on="POS"])
-    data.nt<-data.nt %>% mutate(gene = replace_na(gene, "intergenic"))
+    data.nt<-data.nt %>% dplyr::mutate(gene = tidyr::replace_na(gene, "intergenic"))
     
     # Extract aa mutations info
     #data.aa<-read.table(paste0(query.aa, lineage), h=T)
     data.aa <- read_json(paste0(query.aa, lineage), simplifyVector = TRUE)
     if(is.data.frame(data.aa$data)){
       data.aa <- as.data.frame(data.aa$data)
-      data.aa <- rename(data.aa, mutation.aa = mutation)
+      data.aa <- dplyr::rename(data.aa, mutation.aa = mutation)
       data.aa$genePOS<-paste0(sub('\\:.*', '', data.aa$mutation.aa), ":", 
                               as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", sub('.*\\:', '', data.aa$mutation.aa)))))
       
@@ -62,16 +62,16 @@ extract_mutations_info <-function(x, output) {
     data.nt <- read_json(paste0(query.nt.notUSA, lineage), simplifyVector = TRUE)
     if(is.data.frame(data.nt$data)){
       data.nt<-as.data.frame(data.nt$data)
-      data.nt <- rename(data.nt, mutation.nt = mutation)
+      data.nt <- dplyr::rename(data.nt, mutation.nt = mutation)
       data.nt$POS<-as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", data.nt$mutation.nt)))
       data.nt<-as.data.frame(setDT(genome)[data.nt, on="POS"])
-      data.nt<-data.nt %>% mutate(gene = replace_na(gene, "intergenic"))
+      data.nt<-data.nt %>% dplyr::mutate(gene = tidyr::replace_na(gene, "intergenic"))
       
       # Extract aa mutations info
       data.aa <- read_json(paste0(query.aa.notUSA, lineage), simplifyVector = TRUE)
       if(is.data.frame(data.aa$data)){
         data.aa <- as.data.frame(data.aa$data)
-        data.aa <- rename(data.aa, mutation.aa = mutation)
+        data.aa <- dplyr::rename(data.aa, mutation.aa = mutation)
         data.aa$genePOS<-paste0(sub('\\:.*', '', data.aa$mutation.aa), ":", 
                                 as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", sub('.*\\:', '', data.aa$mutation.aa)))))
         
@@ -134,8 +134,8 @@ min.num.seq.in.lineage = 5
 VoC.variant.force=suppressWarnings(toupper(as.character(read.table("Database_Outbreak_VoC_to_explore.txt", h=F, sep = ","))))
 
 # # SARS-CoV-2 gene location
-# gene<-read.table(url("https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/PositionGenes.txt"), h=T, sep = "\t")
-# 
+gene<-read.table(url("https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/PositionGenes.txt"), h=T, sep = "\t")
+ 
 
 
 
@@ -147,25 +147,25 @@ VoC.variant.force=suppressWarnings(toupper(as.character(read.table("Database_Out
 #################################################################
 # SARS-CoV-2 genome description            
 #################################################################
-# 
-# for(i in 1:nrow(gene)){
-#   if(i==1){
-#     genome<-0
-#     genome<-as.data.frame(seq(gene[i, 2], gene[i, 3], by=1)); names(genome)<-"POS"
-#     genome$gene<-gene[i, 1]
-#     genome$aa.pos<-floor((genome$POS-min(genome$POS)+3)/3)
-#   }else{
-#     temp<-0
-#     temp<-as.data.frame(seq(gene[i, 2], gene[i, 3], by=1)); names(temp)<-"POS"
-#     temp$gene<-gene[i, 1]
-#     temp$aa.pos<-floor((temp$POS-min(temp$POS)+3)/3)
-#     genome<-rbind(genome, temp)
-#   }
-# }
-# genome<-as.data.frame(genome)
-# genome$POS<-as.numeric(as.character(genome$POS))
-# genome$genePOS<-paste0(genome$gene, ":", genome$aa.pos)
-# 
+
+for(i in 1:nrow(gene)){
+  if(i==1){
+    genome<-0
+    genome<-as.data.frame(seq(gene[i, 2], gene[i, 3], by=1)); names(genome)<-"POS"
+    genome$gene<-gene[i, 1]
+    genome$aa.pos<-floor((genome$POS-min(genome$POS)+3)/3)
+  }else{
+    temp<-0
+    temp<-as.data.frame(seq(gene[i, 2], gene[i, 3], by=1)); names(temp)<-"POS"
+    temp$gene<-gene[i, 1]
+    temp$aa.pos<-floor((temp$POS-min(temp$POS)+3)/3)
+    genome<-rbind(genome, temp)
+  }
+}
+genome<-as.data.frame(genome)
+genome$POS<-as.numeric(as.character(genome$POS))
+genome$genePOS<-paste0(genome$gene, ":", genome$aa.pos)
+
 
 
 
@@ -276,7 +276,7 @@ data.mutations.ns$type<-ifelse(data.mutations.ns$mutation.nt %like% "[-]", "dele
 # 
 # 
 # # Replace "NA" WHO naming by "Other
-# data.lineages$variant <- data.lineages$variant%>% replace_na('Other')
+# data.lineages$variant <- data.lineages$variant%>% tidyr::replace_na('Other')
 # 
 # 
 # ### Reformat all.variant

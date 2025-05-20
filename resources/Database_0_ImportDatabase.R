@@ -30,17 +30,17 @@ extract_mutations_info <-function(x, output) {
   data.nt <- read_json(paste0(query.nt, lineage), simplifyVector = TRUE)
   if(is.data.frame(data.nt$data)){
     data.nt<-as.data.frame(data.nt$data)
-    data.nt <- rename(data.nt, mutation.nt = mutation)
+    data.nt <- dplyr::rename(data.nt, mutation.nt = mutation)
     data.nt$POS<-as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", data.nt$mutation.nt)))
     data.nt<-as.data.frame(setDT(genome)[data.nt, on="POS"])
-    data.nt<-data.nt %>% mutate(gene = replace_na(gene, "intergenic"))
+    data.nt<-data.nt %>% dplyr::mutate(gene = tidyr::replace_na(gene, "intergenic"))
     
     # Extract aa mutations info
     #data.aa<-read.table(paste0(query.aa, lineage), h=T)
     data.aa <- read_json(paste0(query.aa, lineage), simplifyVector = TRUE)
     if(is.data.frame(data.aa$data)){
       data.aa <- as.data.frame(data.aa$data)
-      data.aa <- rename(data.aa, mutation.aa = mutation)
+      data.aa <- dplyr::rename(data.aa, mutation.aa = mutation)
       data.aa$genePOS<-paste0(sub('\\:.*', '', data.aa$mutation.aa), ":", 
                               as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", sub('.*\\:', '', data.aa$mutation.aa)))))
       
@@ -62,16 +62,16 @@ extract_mutations_info <-function(x, output) {
     data.nt <- read_json(paste0(query.nt.notUSA, lineage), simplifyVector = TRUE)
     if(is.data.frame(data.nt$data)){
       data.nt<-as.data.frame(data.nt$data)
-      data.nt <- rename(data.nt, mutation.nt = mutation)
+      data.nt <- dplyr::rename(data.nt, mutation.nt = mutation)
       data.nt$POS<-as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", data.nt$mutation.nt)))
       data.nt<-as.data.frame(setDT(genome)[data.nt, on="POS"])
-      data.nt<-data.nt %>% mutate(gene = replace_na(gene, "intergenic"))
+      data.nt<-data.nt %>% dplyr::mutate(gene = tidyr::replace_na(gene, "intergenic"))
       
       # Extract aa mutations info
       data.aa <- read_json(paste0(query.aa.notUSA, lineage), simplifyVector = TRUE)
       if(is.data.frame(data.aa$data)){
         data.aa <- as.data.frame(data.aa$data)
-        data.aa <- rename(data.aa, mutation.aa = mutation)
+        data.aa <- dplyr::rename(data.aa, mutation.aa = mutation)
         data.aa$genePOS<-paste0(sub('\\:.*', '', data.aa$mutation.aa), ":", 
                                 as.numeric(as.character(gsub(".([0-9]+).*$", "\\1", sub('.*\\:', '', data.aa$mutation.aa)))))
         
@@ -275,7 +275,7 @@ names(data.lineages)[1]<-"lineage"
 
 
 # Replace "NA" WHO naming by "Other
-data.lineages$variant <- data.lineages$variant%>% replace_na('Other')
+data.lineages$variant <- data.lineages$variant%>% tidyr::replace_na('Other')
 
 
 ### Reformat all.variant

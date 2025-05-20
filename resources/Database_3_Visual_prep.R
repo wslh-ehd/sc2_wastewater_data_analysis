@@ -26,18 +26,18 @@ interval.to.investigate = 2
 
 #################################################################################               
 ## Import data
-data<-read.table("CallVariantALLCompiled.tsv", h=T, sep = "\t")
-depth<-read.table("CallDepthCompiled.tsv", h=F, sep = "\t")
+data<-read.delim("CallVariantALLCompiled.tsv", h=T, sep = "\t")
+depth<-read.delim("CallDepthCompiled.tsv", h=F, sep = "\t")
 
 samplesinfo<-read.xlsx("ListSamples.xlsx", sheet="Samples", startRow = 3)
 runsinfo<-read.xlsx("ListSamples.xlsx", sheet="Runs", startRow = 10)
 
-mutations.variants<-read.table("database_NR_outbreak_lineages.tsv", h=T, sep = "\t")
+mutations.variants<-read.delim("database_NR_outbreak_lineages.tsv", h=T, sep = "\t")
 
-mut.covariants<-read.table("voc_taxo_mut_curated.tsv", h=T, sep="\t", quote = "\\", stringsAsFactors=FALSE)
-mutations.voc.force<-read.table("database_gisaid.voc.force.tsv", h=T, sep = "\t")
+mut.covariants<-read.delim("voc_taxo_mut_curated.tsv", h=T, sep="\t", quote = "\\", stringsAsFactors=FALSE)
+mutations.voc.force<-read.delim("database_gisaid.voc.force.tsv", h=T, sep = "\t")
 
-gene<-read.table(url("https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/PositionGenes.txt"), h=T, sep = "\t")
+gene<-read.delim(url("https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/PositionGenes.txt"), h=T, sep = "\t")
 
 
 
@@ -103,7 +103,7 @@ names(data)[1:2]<-c("run", "samples")
 data<-data[which(is.na(data$POS)==FALSE), ]
 
 # Select/create the columns of interest
-data<-data %>% select("run", "samples", "POS", "ALT_FREQ", "TOTAL_DP", "REF", "ALT", "REF_AA")
+data<-data %>% dplyr::select("run", "samples", "POS", "ALT_FREQ", "TOTAL_DP", "REF", "ALT", "REF_AA")
 data$run_sample<-paste0(data$run, "_", data$samples)
 
 
@@ -145,14 +145,14 @@ samplesinfo <- left_join(samplesinfo, runsinfo, by=c("Run"))
 samplesinfo <- samplesinfo %>% rename(samples = FilesNames)
 samplesinfo <- samplesinfo %>% rename(sites = Location)
 
-samplesinfo <-samplesinfo %>% filter(!is.na(samples))
+samplesinfo <-samplesinfo %>% dplyr::filter(!is.na(samples))
 samplesinfo$Date<-as.Date(as.numeric(as.character(samplesinfo$Date)), origin = "1899-12-30")
 samplesinfo$Date<-as.Date(samplesinfo$Date, "%m%d%y")
 samplesinfo$Samples<-paste0(samplesinfo$sites, "_", samplesinfo$Date)
 samplesinfo$Month<-lubridate::interval(samplesinfo$Date, lubridate::today()) %/% months(1)
 samplesinfo$run_sample<-paste0(samplesinfo$Run, "_", samplesinfo$samples)
 
-samplesinfo<-samplesinfo %>% select("Samples", "sites", "Date", "Sample.type", "QC_Sample",  "QC_Run", "run_sample", "Month")
+samplesinfo<-samplesinfo %>% dplyr::select("Samples", "sites", "Date", "Sample.type", "QC_Sample",  "QC_Run", "run_sample", "Month")
 
 
 
@@ -166,8 +166,8 @@ data <- left_join(data, samplesinfo, by=c("run_sample"))
 #################################################################
 # Select samples
 #################################################################
-data <-data %>% filter(Sample.type == "Sample" & QC_Run == "qc_passed" & Month < interval.to.investigate)
-data <-data %>% filter(QC_Sample %in% c("hold", "qc_passed"))
+data <-data %>% dplyr::filter(Sample.type == "Sample" & QC_Run == "qc_passed" & Month < interval.to.investigate)
+data <-data %>% dplyr::filter(QC_Sample %in% c("hold", "qc_passed"))
 
 
 
@@ -192,8 +192,8 @@ depth$TOTAL_DP<-ifelse(depth$TOTAL_DP>100,100,depth$TOTAL_DP)
 depth$ALT_FREQ<-0
 
 depth<-depth %>% 
-  select("TOTAL_DP", "POS", "ALT_FREQ", "run_sample", "run_sample_POS") %>%
-  filter(run_sample %in% as.character(unique(data$run_sample)))
+  dplyr::select("TOTAL_DP", "POS", "ALT_FREQ", "run_sample", "run_sample_POS") %>%
+  dplyr::filter(run_sample %in% as.character(unique(data$run_sample)))
   
 
 
@@ -206,7 +206,7 @@ depth<-depth %>%
 # Replace NA describing intergenic positions by "inter"
 data$temp<-paste0(data$gene, ":", data$REF_AA, data$aa.pos)
 data$gene<-ifelse(is.na(data$gene), "inter", data$temp)
-data<-data %>% select(-temp)
+data<-data %>% dplyr::select(-temp)
 
 
 # Create mutation.nt variable
@@ -240,21 +240,21 @@ data$mutation.nt<-toupper(data$mutation.nt)
 
 # Preparation: NEXTSTRAIN
 data.voc.nextstrain<- left_join(mut.covariants, data, by=c("mutation.nt"))
-data.voc.nextstrain<-data.voc.nextstrain %>% filter(!is.na(POS))
+data.voc.nextstrain<-data.voc.nextstrain %>% dplyr::filter(!is.na(POS))
 data.voc.nextstrain<-data.voc.nextstrain[, c("mutation.nt", "Lineages", "mutation.aa", "sites", "Date", "POS", "gene", "geneplot", "ALT_FREQ", "TOTAL_DP", "run", "type", "Samples", "run_sample", "run_sample_POS", "QC_Run", "QC_Sample", "Sample.type")]
-order1_xaxis<-data.voc.nextstrain %>% arrange(Date)
+order1_xaxis<-data.voc.nextstrain %>% dplyr::arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.voc.nextstrain that don't have depth info
 data.voc<-reshape2::dcast(data.voc.nextstrain, run_sample~mutation.nt,
                                value.var="mutation.nt",fill=0,fun.aggregate=length)
 data.voc<-reshape2::melt(data.voc, id.vars = "run_sample")
-data.voc<-data.voc %>% filter(run_sample != "NA" & value==0)
+data.voc<-data.voc %>% dplyr::filter(run_sample != "NA" & value==0)
 data.voc$run_sample_POS<-paste0(data.voc$run_sample, "_", parse_number(as.character(data.voc$variable)))
 # Add missing depth: 2. Extract missing depths
-depth.voc.nextstrain<-depth %>% filter(run_sample_POS %in% unique(data.voc$run_sample_POS))
+depth.voc.nextstrain<-depth %>% dplyr::filter(run_sample_POS %in% unique(data.voc$run_sample_POS))
 # Add missing depth: 3. Add samples info to depth
 depth.voc.nextstrain<-as.data.frame(setDT(unique(data.voc.nextstrain[, c("sites", "Date",  "run", "Samples", "run_sample", "QC_Run", "QC_Sample", "Sample.type")]))[depth.voc.nextstrain, on="run_sample"])
 depth.voc.nextstrain<-as.data.frame(setDT(unique(data.voc.nextstrain[, c("mutation.nt", "Lineages", "POS", "mutation.aa", "gene", "geneplot",  "type")]))[depth.voc.nextstrain, on="POS",allow.cartesian=TRUE])
-depth.voc.nextstrain<-depth.voc.nextstrain %>% filter(paste0(run_sample_POS) %!in% paste0(data.voc.nextstrain$run_sample_POS))
+depth.voc.nextstrain<-depth.voc.nextstrain %>% dplyr::filter(paste0(run_sample_POS) %!in% paste0(data.voc.nextstrain$run_sample_POS))
 # Add missing depth: 4. Merge data and depth datasets
 data.voc.nextstrain<-full_join(data.voc.nextstrain, depth.voc.nextstrain, by=intersect(colnames(data.voc.nextstrain), colnames(depth.voc.nextstrain)))
 # Add tooltips info
@@ -270,23 +270,23 @@ rm(data.voc); rm(depth.voc.nextstrain)
 ## Visual 2: Overview of variants of interest (manual entry [forced])
 
 # Preparation: CDC https://covid.cdc.gov/covid-data-tracker/#variant-proportions
-data.voc.force<- left_join(mutations.voc.force %>% select(-POS, -gene, -aa.pos, -type), data, by=c("mutation.nt"))
-data.voc.force<-data.voc.force %>% filter(!is.na(POS))
+data.voc.force<- left_join(mutations.voc.force %>% dplyr::select(-POS, -gene, -aa.pos, -type), data, by=c("mutation.nt"))
+data.voc.force<-data.voc.force %>% dplyr::filter(!is.na(POS))
 #data.voc.force <- data.voc.force %>% rename(Lineages = i.lineage)
 data.voc.force<-data.voc.force[, c("mutation.nt", "lineage", "mutation.aa", "sites", "Date", "POS", "gene", "geneplot", "ALT_FREQ", "TOTAL_DP", "run", "type", "Samples", "run_sample", "run_sample_POS", "QC_Run", "QC_Sample", "Sample.type")]
-order2_xaxis<-data.voc.force %>% arrange(Date)
+order2_xaxis<-data.voc.force %>% dplyr::arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.voc.force that don't have depth info
 data2.voc<-reshape2::dcast(data.voc.force, run_sample~mutation.nt,
                                value.var="mutation.nt",fill=0,fun.aggregate=length)
 data2.voc<-reshape2::melt(data2.voc, id.vars = "run_sample")
-data2.voc<-data2.voc %>% filter(run_sample != "NA" & value==0)
+data2.voc<-data2.voc %>% dplyr::filter(run_sample != "NA" & value==0)
 data2.voc$run_sample_POS<-paste0(data2.voc$run_sample, "_", parse_number(as.character(data2.voc$variable)))
 # Add missing depth: 2. Extract missing depths
-depth.voc.force<-depth %>% filter(run_sample_POS %in% unique(data2.voc$run_sample_POS))
+depth.voc.force<-depth %>% dplyr::filter(run_sample_POS %in% unique(data2.voc$run_sample_POS))
 # Add missing depth: 3. Add samples info to depth
 depth.voc.force<-as.data.frame(setDT(unique(data.voc.force[, c("sites", "Date",  "run", "Samples", "run_sample", "QC_Run", "QC_Sample", "Sample.type")]))[depth.voc.force, on="run_sample"])
 depth.voc.force<-as.data.frame(setDT(unique(data.voc.force[, c("mutation.nt", "lineage", "POS", "mutation.aa",  "gene", "geneplot",  "type")]))[depth.voc.force, on="POS",allow.cartesian=TRUE])
-depth.voc.force<-depth.voc.force %>% filter(paste0(run_sample_POS) %!in% paste0(data.voc.force$run_sample_POS))
+depth.voc.force<-depth.voc.force %>% dplyr::filter(paste0(run_sample_POS) %!in% paste0(data.voc.force$run_sample_POS))
 # Add missing depth: 4. Merge data and depth datasets
 data.voc.force<-full_join(data.voc.force, depth.voc.force, by=intersect(colnames(data.voc.force), colnames(depth.voc.force)))
 # Add tooltips info
@@ -301,22 +301,22 @@ rm(data2.voc); rm(depth.voc.force)
 ## Visual 3: VoC-associated mutations (based on Outbreak database)
 
 # Merge mutations & data 
-data.snp.voc <- right_join(data, mutations.variants %>% filter(status == "Variant of Concern") %>% select(mutation.nt, mutation.aa, lineage, SNP.lineage.count), by=c("mutation.nt"))
-data.snp.voc<-data.snp.voc %>% filter(!is.na(POS))
+data.snp.voc <- right_join(data, mutations.variants %>% dplyr::filter(status == "Variant of Concern") %>% dplyr::select(mutation.nt, mutation.aa, lineage, SNP.lineage.count), by=c("mutation.nt"))
+data.snp.voc<-data.snp.voc %>% dplyr::filter(!is.na(POS))
 data.snp.voc<-data.snp.voc[, c("mutation.nt", "lineage", "SNP.lineage.count", "mutation.aa", "sites", "Date", "POS", "gene", "geneplot", "ALT_FREQ", "TOTAL_DP", "run", "type", "Samples", "run_sample", "run_sample_POS", "QC_Run", "QC_Sample", "Sample.type")]
-order3_xaxis<-data.snp.voc %>% arrange(Date)
+order3_xaxis<-data.snp.voc %>% dplyr::arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.snp.voc that don't have depth info
 data.snp.voc.2<-reshape2::dcast(data.snp.voc, run_sample~mutation.nt,
                           value.var="mutation.nt",fill=0,fun.aggregate=length)
 data.snp.voc.2<-reshape2::melt(data.snp.voc.2, id.vars = "run_sample")
-data.snp.voc.2<-data.snp.voc.2 %>% filter(run_sample != "NA" & value==0)
+data.snp.voc.2<-data.snp.voc.2 %>% dplyr::filter(run_sample != "NA" & value==0)
 data.snp.voc.2$run_sample_POS<-paste0(data.snp.voc.2$run_sample, "_", parse_number(as.character(data.snp.voc.2$variable)))
 # Add missing depth: 2. Extract missing depths
-depth.snp.voc<-depth %>% filter(run_sample_POS %in% unique(data.snp.voc.2$run_sample_POS))
+depth.snp.voc<-depth %>% dplyr::filter(run_sample_POS %in% unique(data.snp.voc.2$run_sample_POS))
 # Add missing depth: 3. Add samples info to depth
 depth.snp.voc<-as.data.frame(setDT(unique(data.snp.voc[, c("sites", "Date",  "run", "Samples", "run_sample", "QC_Run", "QC_Sample", "Sample.type")]))[depth.snp.voc, on="run_sample"])
 depth.snp.voc<-as.data.frame(setDT(unique(data.snp.voc[, c("mutation.nt", "lineage", "SNP.lineage.count", "POS", "mutation.aa", "gene", "geneplot",  "type")]))[depth.snp.voc, on="POS",allow.cartesian=TRUE])
-depth.snp.voc<-depth.snp.voc %>% filter(paste0(run_sample_POS) %!in% paste0(data.snp.voc$run_sample_POS))
+depth.snp.voc<-depth.snp.voc %>% dplyr::filter(paste0(run_sample_POS) %!in% paste0(data.snp.voc$run_sample_POS))
 # Add missing depth: 4. Merge data and depth datasets
 data.snp.voc<-full_join(data.snp.voc, depth.snp.voc, by=intersect(colnames(data.snp.voc), colnames(depth.snp.voc)))
 # Add tooltips info
@@ -335,7 +335,7 @@ rm(data.snp.voc.2); rm(depth.snp.voc)
 data.snp.notvoc<-data %>% dplyr::filter(mutation.nt %!in% unique(data.snp.voc$mutation.nt) & !is.na(POS))
 data.snp.notvoc <- full_join(data.snp.notvoc, mutations.variants %>% dplyr::filter(status != "Variant of Concern") %>% dplyr::select(mutation.nt, mutation.aa, lineage), by=c("mutation.nt"))
 data.snp.notvoc<-data.snp.notvoc[, c("mutation.nt", "lineage", "mutation.aa", "sites", "Date", "POS", "gene", "geneplot", "ALT_FREQ", "TOTAL_DP", "run", "type", "Samples", "run_sample", "run_sample_POS", "QC_Run", "QC_Sample", "Sample.type")]
-order4_xaxis<-data.snp.notvoc %>% arrange(Date)
+order4_xaxis<-data.snp.notvoc %>% dplyr::arrange(Date)
 # Add missing depth: 1. Identify the mutations in data.snp.notvoc that don't have depth info
 data.snp.notvoc.2<-reshape2::dcast(data.snp.notvoc, run_sample~mutation.nt,
                             value.var="mutation.nt",fill=0,fun.aggregate=length)
@@ -343,11 +343,11 @@ data.snp.notvoc.2<-reshape2::melt(data.snp.notvoc.2, id.vars = "run_sample")
 data.snp.notvoc.2<-data.snp.notvoc.2 %>% dplyr::filter(run_sample != "NA" & value==0)
 data.snp.notvoc.2$run_sample_POS<-paste0(data.snp.notvoc.2$run_sample, "_", parse_number(as.character(data.snp.notvoc.2$variable)))
 # Add missing depth: 2. Extract missing depths
-depth.snp.notvoc<-depth %>% filter(run_sample_POS %in% unique(data.snp.notvoc.2$run_sample_POS))
+depth.snp.notvoc<-depth %>% dplyr::filer(run_sample_POS %in% unique(data.snp.notvoc.2$run_sample_POS))
 # Add missing depth: 3. Add samples info to depth
 depth.snp.notvoc<-as.data.frame(setDT(unique(data.snp.notvoc[, c("sites", "Date",  "run", "Samples", "run_sample", "QC_Run", "QC_Sample", "Sample.type")]))[depth.snp.notvoc, on="run_sample"])
 depth.snp.notvoc<-as.data.frame(setDT(unique(data.snp.notvoc[, c("mutation.nt", "lineage", "POS", "mutation.aa", "gene", "geneplot",  "type")]))[depth.snp.notvoc, on="POS",allow.cartesian=TRUE])
-depth.snp.notvoc<-depth.snp.notvoc %>% filter(paste0(run_sample_POS) %!in% paste0(data.snp.notvoc$run_sample_POS))
+depth.snp.notvoc<-depth.snp.notvoc %>% dplyr::filer(paste0(run_sample_POS) %!in% paste0(data.snp.notvoc$run_sample_POS))
 # Add missing depth: 4. Merge data and depth datasets
 data.snp.notvoc<-full_join(data.snp.notvoc, depth.snp.notvoc, by=intersect(colnames(data.snp.notvoc), colnames(depth.snp.notvoc)))
 # Add tooltips info
@@ -361,10 +361,10 @@ rm(data.snp.notvoc.2); rm(depth.snp.notvoc)
 ###############################################################################################
 
 # Prepare data for plot
-data.voc.nextstrain<- data.voc.nextstrain %>% select(Lineages, mutation.nt, mutation.aa, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, QC_Run, QC_Sample, Sample.type)
-data.voc.force<-data.voc.force %>% select(lineage, mutation.nt, mutation.aa, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, QC_Run, QC_Sample, Sample.type)
-data.snp.voc<- data.snp.voc %>% select(mutation.nt, mutation.aa, lineage, SNP.lineage.count, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, POS, QC_Run, QC_Sample, Sample.type)
-data.snp.notvoc<- data.snp.notvoc %>% select(mutation.nt, mutation.aa, lineage, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, POS, QC_Run, QC_Sample, Sample.type)
+data.voc.nextstrain<- data.voc.nextstrain %>% dplyr::select(Lineages, mutation.nt, mutation.aa, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, QC_Run, QC_Sample, Sample.type)
+data.voc.force<-data.voc.force %>% dplyr::select(lineage, mutation.nt, mutation.aa, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, QC_Run, QC_Sample, Sample.type)
+data.snp.voc<- data.snp.voc %>% dplyr::select(mutation.nt, mutation.aa, lineage, SNP.lineage.count, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, POS, QC_Run, QC_Sample, Sample.type)
+data.snp.notvoc<- data.snp.notvoc %>% dplyr::select(mutation.nt, mutation.aa, lineage, sites, Date, ALT_FREQ, TOTAL_DP, run, Samples, display, POS, QC_Run, QC_Sample, Sample.type)
 
 order1_xaxis<-order1_xaxis$Samples
 order2_xaxis<-order2_xaxis$Samples

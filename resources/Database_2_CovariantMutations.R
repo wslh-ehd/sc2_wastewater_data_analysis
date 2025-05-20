@@ -13,7 +13,7 @@ NextstrainClades<-read.table("NextstrainWHO.txt", header = TRUE, sep = "\t")
 names(CovariantsMutations)[1]<-"lineages"
 CovariantsMutations<-CovariantsMutations %>% dplyr::rename("mutation.nt" = "nuc_change")
 CovariantsMutations<-CovariantsMutations %>% dplyr::rename("mutation.aa" = "aa_change")
-CovariantsMutations<- CovariantsMutations %>% dplyr::separate(lineages, c('Lineages', 'WHO') )
+CovariantsMutations<- CovariantsMutations %>% tidyr::separate(lineages, c('Lineages', 'WHO') )
 CovariantsMutations<-CovariantsMutations %>% dplyr::filter(reversion != "y" & mutation.nt != "nuc_change")
 
 
