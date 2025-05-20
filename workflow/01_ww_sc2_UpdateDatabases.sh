@@ -124,7 +124,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 
 
 	# Log
-	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:1.3.11 \
 	    freyja --version >> ../archive/freyja_version.log 2>&1
 
 
@@ -147,7 +147,7 @@ if [ $workflow == "all" ] ||  [ $workflow == "freyja" ]; then
 
 
 	# Update freyja reference database
-	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:latest \
+	docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) staphb/freyja:1.3.11 \
 	    freyja update --outdir . # update lineage database https://github.com/andersen-lab/Freyja
 
 	## Remove recombinants, except the ones listed into Nextstrain
