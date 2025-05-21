@@ -193,7 +193,7 @@ if [[ $workflow == "freyja" ]] || [[ $workflow == "all" ]] || [[ $workflow == "f
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_3_*.R | tee ../archive/R_freyja_3.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_4_*.R | tee ../archive/R_freyja_4.log
     docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_5_*.R | tee ../archive/R_freyja_5.log
-    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data rdashboard3/rdashboard3 Rscript Freyja_6_*.R | tee ../archive/R_freyja_6.log # Added package ISOweek
+    docker run --rm=True -v $PWD:/data -u $(id -u):$(id -g) -w /data r_dashboard/dashboard:latest Rscript Freyja_6_*.R | tee ../archive/R_freyja_6.log
 
 fi
 
