@@ -343,11 +343,11 @@ data.snp.notvoc.2<-reshape2::melt(data.snp.notvoc.2, id.vars = "run_sample")
 data.snp.notvoc.2<-data.snp.notvoc.2 %>% dplyr::filter(run_sample != "NA" & value==0)
 data.snp.notvoc.2$run_sample_POS<-paste0(data.snp.notvoc.2$run_sample, "_", parse_number(as.character(data.snp.notvoc.2$variable)))
 # Add missing depth: 2. Extract missing depths
-depth.snp.notvoc<-depth %>% dplyr::filer(run_sample_POS %in% unique(data.snp.notvoc.2$run_sample_POS))
+depth.snp.notvoc<-depth %>% dplyr::filter(run_sample_POS %in% unique(data.snp.notvoc.2$run_sample_POS))
 # Add missing depth: 3. Add samples info to depth
 depth.snp.notvoc<-as.data.frame(setDT(unique(data.snp.notvoc[, c("sites", "Date",  "run", "Samples", "run_sample", "QC_Run", "QC_Sample", "Sample.type")]))[depth.snp.notvoc, on="run_sample"])
 depth.snp.notvoc<-as.data.frame(setDT(unique(data.snp.notvoc[, c("mutation.nt", "lineage", "POS", "mutation.aa", "gene", "geneplot",  "type")]))[depth.snp.notvoc, on="POS",allow.cartesian=TRUE])
-depth.snp.notvoc<-depth.snp.notvoc %>% dplyr::filer(paste0(run_sample_POS) %!in% paste0(data.snp.notvoc$run_sample_POS))
+depth.snp.notvoc<-depth.snp.notvoc %>% dplyr::filter(paste0(run_sample_POS) %!in% paste0(data.snp.notvoc$run_sample_POS))
 # Add missing depth: 4. Merge data and depth datasets
 data.snp.notvoc<-full_join(data.snp.notvoc, depth.snp.notvoc, by=intersect(colnames(data.snp.notvoc), colnames(depth.snp.notvoc)))
 # Add tooltips info
