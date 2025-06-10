@@ -19,14 +19,15 @@ clade_display_names<-clade_display_names %>%
   dplyr::mutate(legend.position = 1:nrow(clade_display_names))
 
 # Prepare database_lineages_table2 = database_lineages_table + manual_lineages_table
-database_lineages_table2<-rbind(database_lineages_table, manual_lineages_table)
-
+database_lineages_table2<-manual_lineages_table %>%
+  dplyr::add_row(database_lineages_table)
 
 # Merge clade_display_names with database_lineages_table2
 clade_display_names_WHO <- dplyr::left_join(clade_display_names, database_lineages_table2, by="Pango") %>%
   replace(is.na(.), "") %>%
   dplyr::filter(WHO!="") %>% # Get rid of row which have no WHO name
-  dplyr::mutate(Pango = ifelse(Pango == WHO, "", Pango), # Empty Pango if WHO = Pango column (indicate that Pango has a WHO name)
+  dplyr::mutate(Pango = ifelse(Pango_replace != "", Pango_replace, Pango), #allow to change Pango (e.g., XDV.1 > XDV)
+                Pango = ifelse(Pango == WHO, "", Pango), # Empty Pango if WHO = Pango column (indicate that Pango has a WHO name)
                 Legend = ifelse(Pango!="", paste0(WHO, " (", Pango, ")"), WHO)) # Prepare legend for dashboard
 
 
