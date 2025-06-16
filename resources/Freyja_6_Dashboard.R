@@ -117,9 +117,9 @@ data.SARS.level <- rbind(data.SARS.level.UWM, data.SARS.level.MDH, data.SARS.lev
 
 # Add population size
 wwtp.info.levels <- wwtp.info.levels |>
-  dplyr::select(wwtp_GenomicDashboard, wwtp_HorizonExtract, PopulationServed) |> 
+  dplyr::select(wwtp_GenomicDashboard, wwtp_LIMSextract, PopulationServed) |> 
   dplyr::rename(City = wwtp_GenomicDashboard,
-                wwtp_name = wwtp_HorizonExtract) |>
+                wwtp_name = wwtp_LIMSextract) |>
   distinct()
 
 data.SARS.level <- left_join(data.SARS.level, wwtp.info.levels, by=c("wwtp_name"))
