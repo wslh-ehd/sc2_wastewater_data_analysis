@@ -11,7 +11,7 @@ library(ISOweek)
 library(tidyverse)
 library(hrbrthemes) #sudo apt -y install libfontconfig1-dev; sudo apt-get install libcairo2-dev
 library(sf)
-library(zipcodeR)
+#library(zipcodeR)
 
 
 '%!in%' <- function(x,y)!('%in%'(x,y)) 
@@ -30,7 +30,7 @@ is.nan.data.frame <- function(x)
 freyja <-read.table("freyja_plot.tsv", header = TRUE, sep = "\t")
 samplesinfo<-read.xlsx("ListSamples.xlsx", sheet="Samples", startRow = 3)
 runsinfo<-read.xlsx("ListSamples.xlsx", sheet="Runs", startRow = 10)
-wwtp.info<-read.table(url("https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/data/wwtp_info.txt"), h=T, sep = "\t")
+wwtp.info<-read.table("wwtp_info.tsv", h=T, sep = "\t")
 
 
 # Import SARS-CoV-2 loads related data
@@ -85,7 +85,15 @@ freyja <- dplyr::left_join(freyja, samplesinfo, by=c("samples")) %>%
   tidyr::drop_na(Run) # Remove rows containing no Run info
 
 
-
+# WWTP.INFO
+wwtp.info <- wwtp.info %>%
+  dplyr::rename(lat = latitude_city, 
+                long = longitude_city, 
+                sites = wwtp_GenomicDashboard) %>%
+  dplyr::select(sites, lat, long, PopulationServed)   %>%
+  dplyr::filter(!is.na(sites), 
+                sites != "") %>%
+  unique()
 
 ################################################################################
 ######## Estimation of the SARS levels
@@ -418,7 +426,6 @@ colors.plot.heatmap<-lvl.lineage.color %>%
 ################################################################################
 ######## VISUAL: MAP
 ################################################################################
-zipcode<- wwtp.info %>% select(sites, zipcode) %>% filter(zipcode != "NA")
 
 
 # # Define colors - THIS DOESN"T WORK!!
@@ -442,11 +449,11 @@ freyja.map<-freyja %>%
   dplyr::filter(Lineage != "Other")
 
 # Convert zipcode into long and lat
-geo<-as.data.frame(geocode_zip(zipcode$zipcode))
-zipcode$zipcode<-as.character(zipcode$zipcode)
-zipcode<-dplyr::full_join(geo, zipcode, by="zipcode")
-names(zipcode)<-c("zipcode", "lat", "long", "sites")
-freyja.map<-left_join(freyja.map, zipcode, by="sites")
+wwtp.info.geo<-wwtp.info %>%
+  dplyr::select(sites, lat, long)
+
+
+freyja.map<-dplyr::left_join(freyja.map, wwtp.info.geo, by="sites")
 
 ## Extract first occurence of each variant
 freyja.1st.occurence <- freyja.map %>%
