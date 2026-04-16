@@ -42,14 +42,14 @@ mkdir /scratch/projects/SARS-CoV-2/$seq_folder/
 mkdir /scratch/projects/SARS-CoV-2/$seq_folder/fastq/
 
 
-## Move to Seq### Working directory
+## Go to Seq### Working directory
 cd /scratch/projects/SARS-CoV-2/$seq_folder/
 
 
 ## Import the fastq, config, samplesheet and this script
 mv /scratch/projects/SARS-CoV-2/CopyFastqHere/*.gz ./fastq/.
 # Move samplesheet.csv to the working directory
-mv /scratch/projects/SARS-CoV-2/CopyFastqHere/samplesheet.csv samplesheet_$seq_folder.csv
+mv /scratch/projects/SARS-CoV-2/CopyFastqHere/samplesheet_SARS.csv samplesheet_$seq_folder.csv
 # Download viralrecon config file
 curl -k -o custom_ww_viralrecon.config https://raw.githubusercontent.com/wslh-ehd/sc2_wastewater_data_analysis/main/resources/custom_ww_viralrecon.config
 # Download kraken2 (human + phiX) database  - workflow to obtain the files described here: entire workflow to generate these files: https://hackmd.io/@AstrobioMike/kraken2-read-filtering#Download-database-as-built-on-11-Sept-2020-LATEST
